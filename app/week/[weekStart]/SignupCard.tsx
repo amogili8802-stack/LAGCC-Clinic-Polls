@@ -121,24 +121,30 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
     }
   }
 
+  const inputClass =
+    "w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition focus:border-court-green focus:outline-none focus:ring-2 focus:ring-court-green/20";
+
   return (
     <div
-      className={`rounded-xl border p-4 shadow-sm ${
-        isCancelled ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"
+      className={`group relative overflow-hidden rounded-2xl border p-5 shadow-card transition hover:shadow-cardHover ${
+        isCancelled ? "border-red-100 bg-red-50/60" : "border-slate-200/80 bg-white"
       }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <div
+        className={`absolute inset-y-0 left-0 w-1.5 ${isCancelled ? "bg-red-300" : "bg-court-green"}`}
+      />
+      <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
         <div>
-          <h3 className="text-lg font-semibold">{session.template.name}</h3>
-          <p className="text-sm text-slate-600">
+          <h3 className="text-lg font-bold text-court-navy">{session.template.name}</h3>
+          <p className="mt-0.5 text-sm text-slate-500">
             Ages {session.template.ageMin}-{session.template.ageMax} &middot;{" "}
             {formatTime(session.template.startTime)}–{formatTime(session.template.endTime)}
           </p>
         </div>
         {!isCancelled && (
           <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              isFull ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
+            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
+              isFull ? "bg-amber-100 text-amber-800" : "bg-court-greenLight text-court-greenDark"
             }`}
           >
             {isFull ? "Full — waitlist open" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
@@ -147,45 +153,45 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
       </div>
 
       {isCancelled && (
-        <div className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-800">
+        <div className="mt-3 ml-2 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-800">
           Cancelled — {REASON_LABELS[session.cancellationReason || "OTHER"]}
           {session.cancellationNote ? `: ${session.cancellationNote}` : ""}
         </div>
       )}
 
       {activeSignups.length > 0 && (
-        <ul className="mt-3 flex flex-wrap gap-2 text-sm text-slate-700">
+        <ul className="mt-3 ml-2 flex flex-wrap gap-1.5 text-sm text-slate-700">
           {activeSignups.map((s) => (
-            <li key={s.id} className="rounded-full bg-slate-100 px-3 py-1">
-              {s.kidName} ({s.kidAge})
+            <li key={s.id} className="rounded-full bg-slate-100 px-3 py-1 font-medium">
+              {s.kidName} <span className="text-slate-400">({s.kidAge})</span>
             </li>
           ))}
         </ul>
       )}
       {waitlisted.length > 0 && (
-        <div className="mt-2 text-xs text-amber-700">
+        <div className="mt-2 ml-2 text-xs font-medium text-amber-700">
           Waitlist: {waitlisted.map((s) => `${s.kidName} (${s.kidAge})`).join(", ")}
         </div>
       )}
 
       {!isCancelled && (
-        <div className="mt-3">
+        <div className="ml-2 mt-4">
           {!open ? (
             <button
               onClick={() => setOpen(true)}
-              className="rounded-lg bg-court-green px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+              className="rounded-full bg-court-green px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-court-greenDark hover:shadow"
             >
               {isFull ? "Join Waitlist" : "Sign Up"}
             </button>
           ) : (
-            <form onSubmit={submit} className="mt-2 space-y-3 rounded-lg bg-slate-50 p-3">
-              <div className="grid gap-2 sm:grid-cols-2">
+            <form onSubmit={submit} className="mt-2 space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
+              <div className="grid gap-2.5 sm:grid-cols-2">
                 <input
                   type="text"
                   placeholder="Parent/guardian name"
                   value={parentName}
                   onChange={(e) => setParentName(e.target.value)}
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className={inputClass}
                   required
                 />
                 <input
@@ -193,7 +199,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                   placeholder="Cell phone (for text updates)"
                   value={parentPhone}
                   onChange={(e) => setParentPhone(e.target.value)}
-                  className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  className={inputClass}
                   required
                 />
               </div>
@@ -202,10 +208,10 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                 placeholder="Email (optional)"
                 value={parentEmail}
                 onChange={(e) => setParentEmail(e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                className={inputClass}
               />
 
-              <div className="space-y-2">
+              <div className="space-y-2 border-t border-slate-200/80 pt-3">
                 {kids.map((kid, i) => (
                   <div key={i} className="flex gap-2">
                     <input
@@ -213,7 +219,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                       placeholder="Child's name"
                       value={kid.name}
                       onChange={(e) => updateKid(i, "name", e.target.value)}
-                      className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                      className={`flex-1 ${inputClass}`}
                     />
                     <input
                       type="number"
@@ -222,13 +228,13 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                       max={18}
                       value={kid.age}
                       onChange={(e) => updateKid(i, "age", e.target.value)}
-                      className="w-20 rounded-md border border-slate-300 px-3 py-2 text-sm"
+                      className={`w-20 ${inputClass}`}
                     />
                     {kids.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeKidRow(i)}
-                        className="px-2 text-sm text-slate-400 hover:text-red-600"
+                        className="px-2 text-sm text-slate-400 transition hover:text-red-600"
                         aria-label="Remove child"
                       >
                         ✕
@@ -239,27 +245,27 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                 <button
                   type="button"
                   onClick={addKidRow}
-                  className="text-sm font-medium text-court-green hover:underline"
+                  className="text-sm font-semibold text-court-green hover:text-court-greenDark hover:underline"
                 >
                   + Add another child
                 </button>
               </div>
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
-              {success && <p className="text-sm text-emerald-700">{success}</p>}
+              {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+              {success && <p className="text-sm font-medium text-court-greenDark">{success}</p>}
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-1">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-lg bg-court-green px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
+                  className="rounded-full bg-court-green px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-court-greenDark disabled:opacity-60"
                 >
                   {submitting ? "Submitting…" : "Confirm Sign Up"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100"
+                  className="rounded-full px-5 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100"
                 >
                   Cancel
                 </button>

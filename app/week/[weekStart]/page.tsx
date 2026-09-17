@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ensureAndGetWeekSessions, addDays, formatDateLong, formatWeekParam, parseWeekParam } from "@/lib/weeks";
+import {
+  ensureAndGetWeekSessions,
+  addDays,
+  formatDateLong,
+  formatWeekParam,
+  parseWeekParam,
+  mondayOf,
+  todayUTC,
+} from "@/lib/weeks";
 import SignupCard from "./SignupCard";
 import LookupPanel from "./LookupPanel";
 
@@ -18,6 +26,8 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
   const sessions = await ensureAndGetWeekSessions(weekStart);
   const prevWeek = formatWeekParam(addDays(weekStart, -7));
   const nextWeek = formatWeekParam(addDays(weekStart, 7));
+  const isCurrentWeek = weekStart.getTime() === mondayOf(todayUTC()).getTime();
+  const todayKey = todayUTC().toISOString();
 
   const byDate = new Map<string, typeof sessions>();
   for (const s of sessions) {
@@ -28,31 +38,52 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <Link href={`/week/${prevWeek}`} className="text-sm font-medium text-court-navy hover:underline">
-          ← Previous week
+      <div className="mb-6 flex items-center justify-between gap-2">
+        <Link
+          href={`/week/${prevWeek}`}
+          className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-green/40 hover:text-court-green sm:px-4"
+        >
+          <span aria-hidden>←</span> <span className="hidden sm:inline">Previous week</span>
         </Link>
-        <h1 className="text-center text-xl font-bold">
-          Week of {formatDateLong(weekStart)}
-        </h1>
-        <Link href={`/week/${nextWeek}`} className="text-sm font-medium text-court-navy hover:underline">
-          Next week →
+        <div className="text-center">
+          <h1 className="text-lg font-extrabold tracking-tight text-court-navy sm:text-2xl">
+            Week of {formatDateLong(weekStart)}
+          </h1>
+          {isCurrentWeek && (
+            <span className="mt-1 inline-block rounded-full bg-court-ball/60 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-court-greenDark">
+              This week
+            </span>
+          )}
+        </div>
+        <Link
+          href={`/week/${nextWeek}`}
+          className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-green/40 hover:text-court-green sm:px-4"
+        >
+          <span className="hidden sm:inline">Next week</span> <span aria-hidden>→</span>
         </Link>
       </div>
 
       <LookupPanel />
 
       {sessions.length === 0 ? (
-        <p className="text-center text-slate-500">
+        <p className="rounded-2xl border border-dashed border-slate-300 bg-white/60 py-10 text-center text-slate-500">
           No clinics are configured yet. A coach needs to run the setup/seed step.
         </p>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {Array.from(byDate.entries()).map(([dateKey, daySessions]) => (
             <section key={dateKey}>
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-                {formatDateLong(new Date(dateKey))}
-              </h2>
+              <div className="mb-3 flex items-center gap-3">
+                <h2
+                  className={`text-sm font-bold uppercase tracking-wide ${
+                    dateKey === todayKey ? "text-court-green" : "text-slate-500"
+                  }`}
+                >
+                  {formatDateLong(new Date(dateKey))}
+                  {dateKey === todayKey && <span className="ml-2 text-court-ball">●</span>}
+                </h2>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
               <div className="space-y-3">
                 {daySessions.map((session) => (
                   <SignupCard

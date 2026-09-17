@@ -37,6 +37,9 @@ const REASONS: { value: string; label: string }[] = [
   { value: "OTHER", label: "Other" },
 ];
 
+const inputClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15";
+
 export default function DashboardClient({
   coachName,
   weekLabel,
@@ -58,35 +61,47 @@ export default function DashboardClient({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card">
         <div>
-          <p className="text-sm text-slate-500">Signed in as {coachName}</p>
-          <h1 className="text-xl font-bold">Coach Dashboard — Week of {weekLabel}</h1>
+          <p className="text-xs font-semibold uppercase tracking-wide text-court-green">Coach Dashboard</p>
+          <h1 className="mt-0.5 text-xl font-extrabold tracking-tight text-court-navy">
+            Week of {weekLabel}
+          </h1>
+          <p className="mt-0.5 text-sm text-slate-500">Signed in as {coachName}</p>
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100"
+          className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
         >
           Sign out
         </button>
       </div>
 
-      <div className="mb-4 flex justify-between text-sm font-medium text-court-navy">
-        <Link href={prevWeekHref} className="hover:underline">
+      <div className="mb-6 flex justify-between">
+        <Link
+          href={prevWeekHref}
+          className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-navy/30"
+        >
           ← Previous week
         </Link>
-        <Link href={nextWeekHref} className="hover:underline">
+        <Link
+          href={nextWeekHref}
+          className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-navy/30"
+        >
           Next week →
         </Link>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {Array.from(byDate.entries()).map(([dateIso, daySessions]) => (
           <section key={dateIso}>
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-              {formatDateLong(new Date(dateIso))}
-            </h2>
-            <div className="space-y-3">
+            <div className="mb-3 flex items-center gap-3">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+                {formatDateLong(new Date(dateIso))}
+              </h2>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+            <div className="space-y-4">
               {daySessions.map((session) => (
                 <SessionPanel key={session.id} session={session} />
               ))}
@@ -172,21 +187,28 @@ function SessionPanel({ session }: { session: Session }) {
   }
 
   return (
-    <div className={`rounded-xl border p-4 shadow-sm ${isCancelled ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <div
+      className={`relative overflow-hidden rounded-2xl border p-5 shadow-card ${
+        isCancelled ? "border-red-100 bg-red-50/60" : "border-slate-200/80 bg-white"
+      }`}
+    >
+      <div className={`absolute inset-y-0 left-0 w-1.5 ${isCancelled ? "bg-red-300" : "bg-court-navy"}`} />
+      <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
         <div>
-          <h3 className="text-lg font-semibold">{session.template.name}</h3>
-          <p className="text-sm text-slate-600">
+          <h3 className="text-lg font-bold text-court-navy">{session.template.name}</h3>
+          <p className="mt-0.5 text-sm text-slate-500">
             Ages {session.template.ageMin}-{session.template.ageMax} &middot;{" "}
-            {formatTime(session.template.startTime)}–{formatTime(session.template.endTime)} &middot;{" "}
-            {activeSignups.length}/{session.capacity} signed up
-            {waitlisted.length > 0 && ` (+${waitlisted.length} waitlist)`}
+            {formatTime(session.template.startTime)}–{formatTime(session.template.endTime)}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <span className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            {activeSignups.length}/{session.capacity} signed up
+            {waitlisted.length > 0 && ` · +${waitlisted.length} waitlist`}
+          </span>
           <a
             href={`/api/coach/session/${session.id}/roster`}
-            className="rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
+            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
           >
             Export CSV
           </a>
@@ -194,14 +216,14 @@ function SessionPanel({ session }: { session: Session }) {
             <button
               onClick={reopenSession}
               disabled={busy}
-              className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+              className="rounded-full bg-court-green px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-court-greenDark"
             >
               Reopen
             </button>
           ) : (
             <button
               onClick={() => setShowCancel((v) => !v)}
-              className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700"
+              className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700"
             >
               Cancel Clinic
             </button>
@@ -210,7 +232,7 @@ function SessionPanel({ session }: { session: Session }) {
       </div>
 
       {isCancelled && (
-        <div className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-800">
+        <div className="mt-3 ml-2 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-800">
           Cancelled by {session.cancelledBy || "a coach"} —{" "}
           {REASONS.find((r) => r.value === session.cancellationReason)?.label || "Other"}
           {session.cancellationNote ? `: ${session.cancellationNote}` : ""}
@@ -218,14 +240,14 @@ function SessionPanel({ session }: { session: Session }) {
       )}
 
       {showCancel && !isCancelled && (
-        <form onSubmit={cancelSession} className="mt-3 space-y-2 rounded-lg bg-red-50 p-3">
+        <form onSubmit={cancelSession} className="ml-2 mt-3 space-y-2 rounded-xl border border-red-100 bg-red-50/80 p-4">
           <p className="text-sm font-medium text-red-900">
             This will text everyone signed up (including the waitlist) that this clinic is cancelled.
           </p>
           <select
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full rounded-md border border-red-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-red-200 bg-white px-3.5 py-2.5 text-sm shadow-sm focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
           >
             {REASONS.map((r) => (
               <option key={r.value} value={r.value}>
@@ -238,20 +260,20 @@ function SessionPanel({ session }: { session: Session }) {
             placeholder="Optional note (e.g. 'Will reschedule Saturday')"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full rounded-md border border-red-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-red-200 bg-white px-3.5 py-2.5 text-sm shadow-sm focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-1">
             <button
               type="submit"
               disabled={busy}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+              className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60"
             >
               Confirm Cancellation
             </button>
             <button
               type="button"
               onClick={() => setShowCancel(false)}
-              className="rounded-md px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
+              className="rounded-full px-4 py-2 text-sm text-slate-500 transition hover:bg-slate-100"
             >
               Never mind
             </button>
@@ -259,58 +281,69 @@ function SessionPanel({ session }: { session: Session }) {
         </form>
       )}
 
-      <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-        <label>Capacity:</label>
+      <div className="ml-2 mt-4 flex items-center gap-2 text-xs text-slate-500">
+        <label className="font-medium">Capacity:</label>
         <input
           type="number"
           min={1}
           max={100}
           value={capacity}
           onChange={(e) => setCapacity(parseInt(e.target.value, 10) || 1)}
-          className="w-16 rounded-md border border-slate-300 px-2 py-1"
+          className="w-16 rounded-lg border border-slate-200 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
         />
-        <button onClick={saveCapacity} disabled={busy || capacity === session.capacity} className="text-court-navy hover:underline disabled:opacity-40">
+        <button
+          onClick={saveCapacity}
+          disabled={busy || capacity === session.capacity}
+          className="font-semibold text-court-navy hover:underline disabled:opacity-40"
+        >
           Save
         </button>
       </div>
 
       {session.signups.length > 0 && (
-        <table className="mt-3 w-full text-left text-sm">
-          <thead>
-            <tr className="text-xs uppercase text-slate-400">
-              <th className="py-1">Child</th>
-              <th>Parent</th>
-              <th>Phone</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...activeSignups, ...waitlisted].map((s) => (
-              <tr key={s.id} className="border-t border-slate-100">
-                <td className="py-1.5">
-                  {s.kidName} ({s.kidAge}){s.waitlisted && <span className="ml-1 text-amber-700">waitlist</span>}
-                  {s.addedByCoach && <span className="ml-1 text-slate-400">· added by coach</span>}
-                </td>
-                <td>{s.parentName}</td>
-                <td>{s.parentPhone}</td>
-                <td className="text-right">
-                  <button
-                    onClick={() => removeSignup(s.id)}
-                    disabled={busy}
-                    className="text-red-600 hover:underline disabled:opacity-40"
-                  >
-                    Remove
-                  </button>
-                </td>
+        <div className="ml-2 mt-4 overflow-hidden rounded-xl border border-slate-100">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                <th className="px-3 py-2 font-semibold">Child</th>
+                <th className="px-3 py-2 font-semibold">Parent</th>
+                <th className="px-3 py-2 font-semibold">Phone</th>
+                <th className="px-3 py-2"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {[...activeSignups, ...waitlisted].map((s) => (
+                <tr key={s.id} className="border-t border-slate-100">
+                  <td className="px-3 py-2">
+                    <span className="font-medium text-slate-700">{s.kidName}</span>{" "}
+                    <span className="text-slate-400">({s.kidAge})</span>
+                    {s.waitlisted && <span className="ml-1.5 font-medium text-amber-700">waitlist</span>}
+                    {s.addedByCoach && <span className="ml-1.5 text-slate-400">· added by coach</span>}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600">{s.parentName}</td>
+                  <td className="px-3 py-2 text-slate-600">{s.parentPhone}</td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      onClick={() => removeSignup(s.id)}
+                      disabled={busy}
+                      className="font-semibold text-red-600 hover:underline disabled:opacity-40"
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="mt-3">
+      <div className="ml-2 mt-4">
         {!showAdd ? (
-          <button onClick={() => setShowAdd(true)} className="text-sm font-medium text-court-green hover:underline">
+          <button
+            onClick={() => setShowAdd(true)}
+            className="text-sm font-semibold text-court-green hover:text-court-greenDark hover:underline"
+          >
             + Add walk-in / phone sign-up
           </button>
         ) : (
@@ -364,17 +397,21 @@ function AddWalkInForm({
   }
 
   return (
-    <form onSubmit={submit} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-2">
-      <input placeholder="Child name" value={kidName} onChange={(e) => setKidName(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-      <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-      <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-      <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
-      {error && <p className="col-span-2 text-sm text-red-600">{error}</p>}
-      <div className="col-span-2 flex gap-2">
-        <button type="submit" disabled={submitting} className="rounded-md bg-court-green px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60">
+    <form onSubmit={submit} className="mt-2 grid gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-2">
+      <input placeholder="Child name" value={kidName} onChange={(e) => setKidName(e.target.value)} className={inputClass} />
+      <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className={inputClass} />
+      <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className={inputClass} />
+      <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={inputClass} />
+      {error && <p className="col-span-2 text-sm font-medium text-red-600">{error}</p>}
+      <div className="col-span-2 flex gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="rounded-full bg-court-green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-court-greenDark disabled:opacity-60"
+        >
           {submitting ? "Adding…" : "Add"}
         </button>
-        <button type="button" onClick={onClose} className="rounded-md px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-100">
+        <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-sm text-slate-500 transition hover:bg-slate-100">
           Cancel
         </button>
       </div>

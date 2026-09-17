@@ -57,33 +57,39 @@ export default function LookupPanel() {
   }
 
   return (
-    <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+    <div className="mb-7 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="font-medium text-court-navy hover:underline"
+        className="flex w-full items-center justify-between gap-2 px-4 py-3.5 text-left text-sm font-semibold text-court-navy transition hover:bg-slate-50"
       >
-        {open ? "Hide" : "Manage my sign-ups"} (cancel or view by phone number)
+        <span className="flex items-center gap-2">
+          <span aria-hidden>🔎</span> Manage my sign-ups
+          <span className="hidden font-normal text-slate-400 sm:inline">— cancel or view by phone number</span>
+        </span>
+        <span className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden>
+          ▾
+        </span>
       </button>
       {open && (
-        <div className="mt-3 space-y-3">
+        <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 p-4 text-sm">
           <form onSubmit={lookup} className="flex gap-2">
             <input
               type="tel"
               placeholder="Phone number used at sign-up"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="flex-1 rounded-md border border-slate-300 px-3 py-2"
+              className="flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
               required
             />
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-court-navy px-4 py-2 font-medium text-white disabled:opacity-60"
+              className="rounded-lg bg-court-navy px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-court-navyLight disabled:opacity-60"
             >
               {loading ? "Looking…" : "Find"}
             </button>
           </form>
-          {error && <p className="text-red-600">{error}</p>}
+          {error && <p className="font-medium text-red-600">{error}</p>}
           {results && results.length === 0 && (
             <p className="text-slate-500">No upcoming sign-ups found for that number.</p>
           )}
@@ -92,17 +98,18 @@ export default function LookupPanel() {
               {results.map((s) => (
                 <li
                   key={s.id}
-                  className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-white px-3.5 py-2.5 shadow-sm"
                 >
                   <span>
-                    <strong>{s.kidName}</strong> ({s.kidAge}) — {s.sessionLabel} on {s.sessionDate}
-                    {s.waitlisted && <em className="ml-1 text-amber-700">(waitlist)</em>}
-                    {s.cancelled && <em className="ml-1 text-red-700">(clinic cancelled)</em>}
+                    <strong className="text-court-navy">{s.kidName}</strong>{" "}
+                    <span className="text-slate-400">({s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
+                    {s.waitlisted && <em className="ml-1 font-medium text-amber-700">(waitlist)</em>}
+                    {s.cancelled && <em className="ml-1 font-medium text-red-700">(clinic cancelled)</em>}
                   </span>
                   <button
                     onClick={() => removeSignup(s.id)}
                     disabled={removingId === s.id}
-                    className="text-red-600 hover:underline disabled:opacity-60"
+                    className="shrink-0 font-semibold text-red-600 hover:underline disabled:opacity-60"
                   >
                     {removingId === s.id ? "Removing…" : "Remove"}
                   </button>
