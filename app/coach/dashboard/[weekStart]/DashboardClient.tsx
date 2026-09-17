@@ -1,0 +1,383 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { signOut } from "next-auth/react";
+import { formatTime } from "@/lib/clinics";
+import { formatDateLong } from "@/lib/weeks";
+
+type Signup = {
+  id: string;
+  kidName: string;
+  kidAge: number;
+  parentName: string;
+  parentPhone: string;
+  parentEmail: string | null;
+  waitlisted: boolean;
+  addedByCoach: boolean;
+  createdAt: string;
+};
+
+type Session = {
+  id: string;
+  date: string;
+  capacity: number;
+  status: string;
+  cancellationReason?: string | null;
+  cancellationNote?: string | null;
+  cancelledBy?: string | null;
+  template: { name: string; startTime: string; endTime: string; ageMin: number; ageMax: number };
+  signups: Signup[];
+};
+
+const REASONS: { value: string; label: string }[] = [
+  { value: "RAIN", label: "Rain" },
+  { value: "HEAT", label: "Extreme heat" },
+  { value: "LOW_SIGNUPS", label: "Not enough sign-ups" },
+  { value: "OTHER", label: "Other" },
+];
+
+export default function DashboardClient({
+  coachName,
+  weekLabel,
+  prevWeekHref,
+  nextWeekHref,
+  sessions,
+}: {
+  coachName: string;
+  weekLabel: string;
+  prevWeekHref: string;
+  nextWeekHref: string;
+  sessions: Session[];
+}) {
+  const byDate = new Map<string, Session[]>();
+  for (const s of sessions) {
+    if (!byDate.has(s.date)) byDate.set(s.date, []);
+    byDate.get(s.date)!.push(s);
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-slate-500">Signed in as {coachName}</p>
+          <h1 className="text-xl font-bold">Coach Dashboard — Week of {weekLabel}</h1>
+        </div>
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100"
+        >
+          Sign out
+        </button>
+      </div>
+
+      <div className="mb-4 flex justify-between text-sm font-medium text-court-navy">
+        <Link href={prevWeekHref} className="hover:underline">
+          ← Previous week
+        </Link>
+        <Link href={nextWeekHref} className="hover:underline">
+          Next week →
+        </Link>
+      </div>
+
+      <div className="space-y-6">
+        {Array.from(byDate.entries()).map(([dateIso, daySessions]) => (
+          <section key={dateIso}>
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+              {formatDateLong(new Date(dateIso))}
+            </h2>
+            <div className="space-y-3">
+              {daySessions.map((session) => (
+                <SessionPanel key={session.id} session={session} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SessionPanel({ session }: { session: Session }) {
+  const [busy, setBusy] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
+  const [reason, setReason] = useState("RAIN");
+  const [note, setNote] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [capacity, setCapacity] = useState(session.capacity);
+
+  const activeSignups = session.signups.filter((s) => !s.waitlisted);
+  const waitlisted = session.signups.filter((s) => s.waitlisted);
+  const isCancelled = session.status === "CANCELLED";
+
+  async function refresh() {
+    window.location.reload();
+  }
+
+  async function removeSignup(id: string) {
+    if (!confirm("Remove this child from the roster?")) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/coach/signup/${id}`, { method: "DELETE" });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function cancelSession(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/coach/session/${session.id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason, note }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Clinic cancelled. ${data.textsSent} text message(s) sent.`);
+        await refresh();
+      } else {
+        alert(data.error || "Failed to cancel.");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function reopenSession() {
+    if (!confirm("Reopen this clinic (undo cancellation)?")) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/coach/session/${session.id}/reopen`, { method: "POST" });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveCapacity() {
+    setBusy(true);
+    try {
+      await fetch(`/api/coach/session/${session.id}/capacity`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ capacity }),
+      });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={`rounded-xl border p-4 shadow-sm ${isCancelled ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h3 className="text-lg font-semibold">{session.template.name}</h3>
+          <p className="text-sm text-slate-600">
+            Ages {session.template.ageMin}-{session.template.ageMax} &middot;{" "}
+            {formatTime(session.template.startTime)}–{formatTime(session.template.endTime)} &middot;{" "}
+            {activeSignups.length}/{session.capacity} signed up
+            {waitlisted.length > 0 && ` (+${waitlisted.length} waitlist)`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/api/coach/session/${session.id}/roster`}
+            className="rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
+          >
+            Export CSV
+          </a>
+          {isCancelled ? (
+            <button
+              onClick={reopenSession}
+              disabled={busy}
+              className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+            >
+              Reopen
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowCancel((v) => !v)}
+              className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700"
+            >
+              Cancel Clinic
+            </button>
+          )}
+        </div>
+      </div>
+
+      {isCancelled && (
+        <div className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-800">
+          Cancelled by {session.cancelledBy || "a coach"} —{" "}
+          {REASONS.find((r) => r.value === session.cancellationReason)?.label || "Other"}
+          {session.cancellationNote ? `: ${session.cancellationNote}` : ""}
+        </div>
+      )}
+
+      {showCancel && !isCancelled && (
+        <form onSubmit={cancelSession} className="mt-3 space-y-2 rounded-lg bg-red-50 p-3">
+          <p className="text-sm font-medium text-red-900">
+            This will text everyone signed up (including the waitlist) that this clinic is cancelled.
+          </p>
+          <select
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full rounded-md border border-red-300 px-3 py-2 text-sm"
+          >
+            {REASONS.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Optional note (e.g. 'Will reschedule Saturday')"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full rounded-md border border-red-300 px-3 py-2 text-sm"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={busy}
+              className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+            >
+              Confirm Cancellation
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCancel(false)}
+              className="rounded-md px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
+            >
+              Never mind
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+        <label>Capacity:</label>
+        <input
+          type="number"
+          min={1}
+          max={100}
+          value={capacity}
+          onChange={(e) => setCapacity(parseInt(e.target.value, 10) || 1)}
+          className="w-16 rounded-md border border-slate-300 px-2 py-1"
+        />
+        <button onClick={saveCapacity} disabled={busy || capacity === session.capacity} className="text-court-navy hover:underline disabled:opacity-40">
+          Save
+        </button>
+      </div>
+
+      {session.signups.length > 0 && (
+        <table className="mt-3 w-full text-left text-sm">
+          <thead>
+            <tr className="text-xs uppercase text-slate-400">
+              <th className="py-1">Child</th>
+              <th>Parent</th>
+              <th>Phone</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...activeSignups, ...waitlisted].map((s) => (
+              <tr key={s.id} className="border-t border-slate-100">
+                <td className="py-1.5">
+                  {s.kidName} ({s.kidAge}){s.waitlisted && <span className="ml-1 text-amber-700">waitlist</span>}
+                  {s.addedByCoach && <span className="ml-1 text-slate-400">· added by coach</span>}
+                </td>
+                <td>{s.parentName}</td>
+                <td>{s.parentPhone}</td>
+                <td className="text-right">
+                  <button
+                    onClick={() => removeSignup(s.id)}
+                    disabled={busy}
+                    className="text-red-600 hover:underline disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <div className="mt-3">
+        {!showAdd ? (
+          <button onClick={() => setShowAdd(true)} className="text-sm font-medium text-court-green hover:underline">
+            + Add walk-in / phone sign-up
+          </button>
+        ) : (
+          <AddWalkInForm sessionId={session.id} onDone={() => refresh()} onClose={() => setShowAdd(false)} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddWalkInForm({
+  sessionId,
+  onDone,
+  onClose,
+}: {
+  sessionId: string;
+  onDone: () => void;
+  onClose: () => void;
+}) {
+  const [kidName, setKidName] = useState("");
+  const [kidAge, setKidAge] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const age = parseInt(kidAge, 10);
+    if (!kidName.trim() || !parentName.trim() || !parentPhone.trim() || Number.isNaN(age)) {
+      setError("Fill in child name, age, parent name and phone.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/coach/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, kidName, kidAge: age, parentName, parentPhone }),
+      });
+      if (res.ok) {
+        onDone();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to add.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-2 grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-2">
+      <input placeholder="Child name" value={kidName} onChange={(e) => setKidName(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      {error && <p className="col-span-2 text-sm text-red-600">{error}</p>}
+      <div className="col-span-2 flex gap-2">
+        <button type="submit" disabled={submitting} className="rounded-md bg-court-green px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60">
+          {submitting ? "Adding…" : "Add"}
+        </button>
+        <button type="button" onClick={onClose} className="rounded-md px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-100">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
