@@ -36,6 +36,13 @@ below).
   time, with prev/next navigation). Parents fill in their name and phone
   number once and can add multiple kids in the same sign-up, each with their
   own member number.
+- **Rolling weekly release** — a week only opens for public sign-up at
+  10:00am (club-local time, `CLUB_TIMEZONE`) on the Thursday of the week
+  before it. The current week is always open; anything further out shows a
+  "sign-ups open [date/time]" message instead of the clinic list. Coaches
+  aren't affected — the dashboard always shows every week. Enforced both on
+  the page and in the sign-up API, so it can't be bypassed by hitting the
+  API directly.
 - **Waitlisting** once a clinic hits capacity.
 - **Auto-cancellation for low sign-ups** — every clinic has a minimum
   (default 4) and maximum (default 8), both coach-editable per session. A
@@ -118,6 +125,9 @@ account to work:
   nobody else can trigger a mass-cancellation by hitting the URL. Generate
   one the same way as `NEXTAUTH_SECRET` and add it in Vercel's project
   settings (it doesn't need to be in your local `.env`).
+- **`CLUB_TIMEZONE`** — optional, defaults to `America/Los_Angeles`. Only
+  used to compute the Thursday-10am weekly release time. Set it to your
+  club's IANA timezone (e.g. `America/New_York`) if it's not Pacific.
 
 The database schema and clinic schedule sync themselves automatically on
 every `npm run build` (see `package.json`'s `build` script) — there's no

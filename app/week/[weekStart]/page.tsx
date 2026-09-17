@@ -8,6 +8,8 @@ import {
   parseWeekParam,
   mondayOf,
   todayUTC,
+  isWeekOpenForSignup,
+  formatOpensAt,
 } from "@/lib/weeks";
 import SignupCard from "./SignupCard";
 import LookupPanel from "./LookupPanel";
@@ -23,7 +25,8 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
     notFound();
   }
 
-  const sessions = await ensureAndGetWeekSessions(weekStart);
+  const isOpen = isWeekOpenForSignup(weekStart);
+  const sessions = isOpen ? await ensureAndGetWeekSessions(weekStart) : [];
   const prevWeek = formatWeekParam(addDays(weekStart, -7));
   const nextWeek = formatWeekParam(addDays(weekStart, 7));
   const isCurrentWeek = weekStart.getTime() === mondayOf(todayUTC()).getTime();
@@ -69,7 +72,15 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
 
       <LookupPanel />
 
-      {sessions.length === 0 ? (
+      {!isOpen ? (
+        <div className="rounded-2xl border border-dashed border-court-gold/40 bg-court-goldLight/40 py-12 text-center">
+          <p className="font-display text-lg font-semibold text-court-navy">Not open yet</p>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-court-navy/60">
+            Sign-ups for this week open <strong className="text-court-navy">{formatOpensAt(weekStart)}</strong>.
+            Check back then!
+          </p>
+        </div>
+      ) : sessions.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-court-navy/20 bg-white/60 py-10 text-center text-court-navy/50">
           No clinics are configured yet. A coach needs to run the setup/seed step.
         </p>

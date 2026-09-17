@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
-import { formatDateLong } from "@/lib/weeks";
+import { formatDateLong, mondayOf, isWeekOpenForSignup, formatOpensAt } from "@/lib/weeks";
 
 const clubName = process.env.CLUB_NAME || "The club";
 
@@ -40,6 +40,13 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Clinic session not found." }, { status: 404 });
   if (session.status === "CANCELLED") {
     return NextResponse.json({ error: "This clinic has been cancelled." }, { status: 400 });
+  }
+  const weekStart = mondayOf(session.date);
+  if (!isWeekOpenForSignup(weekStart)) {
+    return NextResponse.json(
+      { error: `Sign-ups for this week open ${formatOpensAt(weekStart)}.` },
+      { status: 400 }
+    );
   }
 
   const activeCount = session.signups.filter((s) => !s.waitlisted).length;
