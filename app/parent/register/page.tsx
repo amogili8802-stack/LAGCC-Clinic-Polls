@@ -92,6 +92,19 @@ export default function ParentRegisterPage() {
           required
         />
         {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+        <p className="text-xs leading-relaxed text-court-navy/50">
+          By creating an account, you agree to receive SMS text messages about your clinic sign-ups
+          (confirmations, waitlist status, and cancellations) at the phone number above. Message and
+          data rates may apply. Reply STOP to opt out. See our{" "}
+          <Link href="/privacy" className="underline hover:text-court-navy/70">
+            Privacy Policy
+          </Link>{" "}
+          and{" "}
+          <Link href="/terms" className="underline hover:text-court-navy/70">
+            Terms &amp; Conditions
+          </Link>
+          .
+        </p>
         <button
           type="submit"
           disabled={loading}

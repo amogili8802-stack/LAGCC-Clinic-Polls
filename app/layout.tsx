@@ -72,6 +72,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <footer className="border-t border-court-navy/10 py-8 text-center text-xs text-court-navy/40">
             <span className="font-script text-lg text-court-navy/30">{clubName}</span>
             <p className="mt-1">Questions about a clinic? Contact the pro shop.</p>
+            <p className="mt-2 space-x-3">
+              <Link href="/privacy" className="hover:text-court-navy/70 hover:underline">
+                Privacy Policy
+              </Link>
+              <span aria-hidden>&middot;</span>
+              <Link href="/terms" className="hover:text-court-navy/70 hover:underline">
+                Terms &amp; Conditions
+              </Link>
+            </p>
           </footer>
         </Providers>
       </body>
