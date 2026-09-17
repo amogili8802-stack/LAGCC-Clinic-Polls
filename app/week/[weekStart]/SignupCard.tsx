@@ -131,7 +131,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
   return (
     <div
       className={`group relative overflow-hidden rounded-2xl border p-5 shadow-card transition hover:shadow-cardHover ${
-        isCancelled ? "border-red-100 bg-red-50/60" : "border-slate-200/80 bg-white"
+        isCancelled ? "border-red-100 bg-red-50/60" : "border-court-navy/10 bg-white"
       }`}
     >
       <div
@@ -139,8 +139,8 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
       />
       <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
         <div>
-          <h3 className="text-lg font-bold text-court-navy">{session.template.name}</h3>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <h3 className="font-display text-lg font-semibold text-court-navy">{session.template.name}</h3>
+          <p className="mt-0.5 text-sm text-court-navy/50">
             Ages {session.template.ageMin}-{session.template.ageMax} &middot;{" "}
             {formatTime(session.template.startTime)}–{formatTime(session.template.endTime)}
           </p>
@@ -148,7 +148,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
         {!isCancelled && (
           <span
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-white ${
-              isFull ? "bg-amber-600" : "bg-court-green"
+              isFull ? "bg-court-clay" : "bg-court-green"
             }`}
           >
             {isFull ? "Full — waitlist open" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
@@ -164,16 +164,16 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
       )}
 
       {activeSignups.length > 0 && (
-        <ul className="mt-3 ml-2 flex flex-wrap gap-1.5 text-sm text-slate-700">
+        <ul className="mt-3 ml-2 flex flex-wrap gap-1.5 text-sm text-court-navy/80">
           {activeSignups.map((s) => (
-            <li key={s.id} className="rounded-full bg-slate-100 px-3 py-1 font-medium">
-              {s.kidName} <span className="text-slate-400">({s.kidAge})</span>
+            <li key={s.id} className="rounded-full bg-court-navy/[0.05] px-3 py-1 font-medium">
+              {s.kidName} <span className="text-court-navy/40">({s.kidAge})</span>
             </li>
           ))}
         </ul>
       )}
       {waitlisted.length > 0 && (
-        <div className="mt-2 ml-2 text-xs font-medium text-amber-700">
+        <div className="mt-2 ml-2 text-xs font-medium text-court-clay">
           Waitlist: {waitlisted.map((s) => `${s.kidName} (${s.kidAge})`).join(", ")}
         </div>
       )}
@@ -183,12 +183,15 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
           {!open ? (
             <button
               onClick={() => setOpen(true)}
-              className="rounded-full bg-court-green px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-court-greenDark hover:shadow"
+              className="group/btn inline-flex items-center gap-1.5 rounded-full bg-court-green px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-court-greenDark hover:shadow-md"
             >
               {isFull ? "Join Waitlist" : "Sign Up"}
+              <span aria-hidden className="transition-transform group-hover/btn:translate-x-0.5">
+                →
+              </span>
             </button>
           ) : (
-            <form onSubmit={submit} className="mt-2 space-y-3 rounded-xl border border-slate-100 bg-slate-50/80 p-4">
+            <form onSubmit={submit} className="mt-2 space-y-3 rounded-xl border border-court-navy/10 bg-court-cream/50 p-4">
               <div className="grid gap-2.5 sm:grid-cols-2">
                 <input
                   type="text"
@@ -215,9 +218,9 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                 className={`w-full ${inputClass}`}
               />
 
-              <div className="space-y-2 border-t border-slate-200/80 pt-3">
+              <div className="space-y-2 border-t border-court-navy/10 pt-3">
                 {kids.map((kid, i) => (
-                  <div key={i} className="space-y-1.5 rounded-lg border border-slate-200 bg-white p-2.5">
+                  <div key={i} className="space-y-1.5 rounded-lg border border-court-navy/10 bg-white p-2.5">
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -239,7 +242,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                         <button
                           type="button"
                           onClick={() => removeKidRow(i)}
-                          className="px-2 text-sm text-slate-400 transition hover:text-red-600"
+                          className="px-2 text-sm text-court-navy/30 transition hover:text-red-600"
                           aria-label="Remove child"
                         >
                           ✕
@@ -278,7 +281,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-full px-5 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100"
+                  className="rounded-full px-5 py-2 text-sm font-medium text-court-navy/50 transition hover:bg-court-navy/5"
                 >
                   Cancel
                 </button>

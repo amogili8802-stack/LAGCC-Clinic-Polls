@@ -57,28 +57,28 @@ export default function LookupPanel() {
   }
 
   return (
-    <div className="mb-7 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
+    <div className="mb-7 overflow-hidden rounded-2xl border border-court-navy/10 bg-white shadow-card">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 px-4 py-3.5 text-left text-sm font-semibold text-court-navy transition hover:bg-slate-50"
+        className="flex w-full items-center justify-between gap-2 px-4 py-3.5 text-left text-sm font-semibold text-court-navy transition hover:bg-court-navy/[0.03]"
       >
         <span className="flex items-center gap-2">
-          <span aria-hidden>🔎</span> Manage my sign-ups
-          <span className="hidden font-normal text-slate-400 sm:inline">— cancel or view by phone number</span>
+          <span aria-hidden className="text-court-gold">✦</span> Manage my sign-ups
+          <span className="hidden font-normal text-court-navy/40 sm:inline">— cancel or view by phone number</span>
         </span>
-        <span className={`text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden>
+        <span className={`text-court-navy/40 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden>
           ▾
         </span>
       </button>
       {open && (
-        <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 p-4 text-sm">
+        <div className="space-y-3 border-t border-court-navy/10 bg-court-cream/50 p-4 text-sm">
           <form onSubmit={lookup} className="flex gap-2">
             <input
               type="tel"
               placeholder="Phone number used at sign-up"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="flex-1 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+              className="flex-1 rounded-lg border border-court-navy/15 bg-white px-3.5 py-2.5 shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
               required
             />
             <button
@@ -91,19 +91,19 @@ export default function LookupPanel() {
           </form>
           {error && <p className="font-medium text-red-600">{error}</p>}
           {results && results.length === 0 && (
-            <p className="text-slate-500">No upcoming sign-ups found for that number.</p>
+            <p className="text-court-navy/50">No upcoming sign-ups found for that number.</p>
           )}
           {results && results.length > 0 && (
             <ul className="space-y-2">
               {results.map((s) => (
                 <li
                   key={s.id}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-100 bg-white px-3.5 py-2.5 shadow-sm"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-court-navy/10 bg-white px-3.5 py-2.5 shadow-sm"
                 >
                   <span>
                     <strong className="text-court-navy">{s.kidName}</strong>{" "}
-                    <span className="text-slate-400">({s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
-                    {s.waitlisted && <em className="ml-1 font-medium text-amber-700">(waitlist)</em>}
+                    <span className="text-court-navy/40">({s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
+                    {s.waitlisted && <em className="ml-1 font-medium text-court-gold">(waitlist)</em>}
                     {s.cancelled && <em className="ml-1 font-medium text-red-700">(clinic cancelled)</em>}
                   </span>
                   <button

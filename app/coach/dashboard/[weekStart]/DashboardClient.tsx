@@ -40,7 +40,7 @@ const REASONS: { value: string; label: string }[] = [
 ];
 
 const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15";
+  "w-full rounded-lg border border-court-navy/15 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15";
 
 export default function DashboardClient({
   coachName,
@@ -63,17 +63,17 @@ export default function DashboardClient({
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-court-navy/10 bg-white p-5 shadow-card">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-court-green">Coach Dashboard</p>
-          <h1 className="mt-0.5 text-xl font-extrabold tracking-tight text-court-navy">
+          <p className="text-xs font-semibold uppercase tracking-widest text-court-gold">Coach Dashboard</p>
+          <h1 className="mt-0.5 font-display text-xl font-semibold tracking-tight text-court-navy">
             Week of {weekLabel}
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500">Signed in as {coachName}</p>
+          <p className="mt-0.5 text-sm text-court-navy/50">Signed in as {coachName}</p>
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+          className="rounded-full border border-court-navy/15 px-4 py-1.5 text-sm font-medium text-court-navy/70 transition hover:border-court-navy/30 hover:bg-court-navy/5"
         >
           Sign out
         </button>
@@ -82,13 +82,13 @@ export default function DashboardClient({
       <div className="mb-6 flex justify-between">
         <Link
           href={prevWeekHref}
-          className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-navy/30"
+          className="flex items-center gap-1 rounded-full border border-court-navy/15 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-navy/30"
         >
           ← Previous week
         </Link>
         <Link
           href={nextWeekHref}
-          className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-navy/30"
+          className="flex items-center gap-1 rounded-full border border-court-navy/15 bg-white px-3 py-1.5 text-sm font-medium text-court-navy shadow-sm transition hover:border-court-navy/30"
         >
           Next week →
         </Link>
@@ -98,10 +98,10 @@ export default function DashboardClient({
         {Array.from(byDate.entries()).map(([dateIso, daySessions]) => (
           <section key={dateIso}>
             <div className="mb-3 flex items-center gap-3">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+              <h2 className="font-display text-base font-semibold text-court-navy/70">
                 {formatDateLong(new Date(dateIso))}
               </h2>
-              <div className="h-px flex-1 bg-slate-200" />
+              <div className="h-px flex-1 bg-gradient-to-r from-court-navy/15 to-transparent" />
             </div>
             <div className="space-y-4">
               {daySessions.map((session) => (
@@ -198,14 +198,14 @@ function SessionPanel({ session }: { session: Session }) {
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border p-5 shadow-card ${
-        isCancelled ? "border-red-100 bg-red-50/60" : "border-slate-200/80 bg-white"
+        isCancelled ? "border-red-100 bg-red-50/60" : "border-court-navy/10 bg-white"
       }`}
     >
       <div className={`absolute inset-y-0 left-0 w-1.5 ${isCancelled ? "bg-red-300" : "bg-court-navy"}`} />
       <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
         <div>
-          <h3 className="text-lg font-bold text-court-navy">{session.template.name}</h3>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <h3 className="font-display text-lg font-semibold text-court-navy">{session.template.name}</h3>
+          <p className="mt-0.5 text-sm text-court-navy/50">
             Ages {session.template.ageMin}-{session.template.ageMax} &middot;{" "}
             {formatTime(session.template.startTime)}–{formatTime(session.template.endTime)}
           </p>
@@ -213,7 +213,7 @@ function SessionPanel({ session }: { session: Session }) {
         <div className="flex items-center gap-2">
           <span
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
-              belowMinimum ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600"
+              belowMinimum ? "bg-court-goldLight text-court-gold" : "bg-court-navy/[0.06] text-court-navy/70"
             }`}
           >
             {activeSignups.length}/{session.capacity} signed up
@@ -222,7 +222,7 @@ function SessionPanel({ session }: { session: Session }) {
           </span>
           <a
             href={`/api/coach/session/${session.id}/roster`}
-            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+            className="rounded-full border border-court-navy/15 px-3 py-1 text-xs font-medium text-court-navy/70 transition hover:border-court-navy/30 hover:bg-court-navy/5"
           >
             Export CSV
           </a>
@@ -287,7 +287,7 @@ function SessionPanel({ session }: { session: Session }) {
             <button
               type="button"
               onClick={() => setShowCancel(false)}
-              className="rounded-full px-4 py-2 text-sm text-slate-500 transition hover:bg-slate-100"
+              className="rounded-full px-4 py-2 text-sm text-court-navy/50 transition hover:bg-court-navy/5"
             >
               Never mind
             </button>
@@ -295,7 +295,7 @@ function SessionPanel({ session }: { session: Session }) {
         </form>
       )}
 
-      <div className="ml-2 mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+      <div className="ml-2 mt-4 flex flex-wrap items-center gap-3 text-xs text-court-navy/60">
         <span className="flex items-center gap-1.5">
           <label className="font-medium">Min to run:</label>
           <input
@@ -304,7 +304,7 @@ function SessionPanel({ session }: { session: Session }) {
             max={100}
             value={minSignups}
             onChange={(e) => setMinSignups(parseInt(e.target.value, 10) || 0)}
-            className="w-14 rounded-lg border border-slate-200 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+            className="w-14 rounded-lg border border-court-navy/15 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
           />
         </span>
         <span className="flex items-center gap-1.5">
@@ -315,7 +315,7 @@ function SessionPanel({ session }: { session: Session }) {
             max={100}
             value={capacity}
             onChange={(e) => setCapacity(parseInt(e.target.value, 10) || 1)}
-            className="w-14 rounded-lg border border-slate-200 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+            className="w-14 rounded-lg border border-court-navy/15 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
           />
         </span>
         <button
@@ -327,16 +327,16 @@ function SessionPanel({ session }: { session: Session }) {
         </button>
       </div>
       {!isCancelled && (
-        <p className="ml-2 mt-1 text-xs text-slate-400">
+        <p className="ml-2 mt-1 text-xs text-court-navy/35">
           Auto-cancels at 8pm the day before if under {session.minSignups} sign-ups.
         </p>
       )}
 
       {session.signups.length > 0 && (
-        <div className="ml-2 mt-4 overflow-hidden rounded-xl border border-slate-100">
+        <div className="ml-2 mt-4 overflow-hidden rounded-xl border border-court-navy/10">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="bg-court-navy/[0.03] text-xs uppercase tracking-wide text-court-navy/40">
                 <th className="px-3 py-2 font-semibold">Child</th>
                 <th className="px-3 py-2 font-semibold">Member #</th>
                 <th className="px-3 py-2 font-semibold">Parent</th>
@@ -346,16 +346,16 @@ function SessionPanel({ session }: { session: Session }) {
             </thead>
             <tbody>
               {[...activeSignups, ...waitlisted].map((s) => (
-                <tr key={s.id} className="border-t border-slate-100">
+                <tr key={s.id} className="border-t border-court-navy/10">
                   <td className="px-3 py-2">
-                    <span className="font-medium text-slate-700">{s.kidName}</span>{" "}
-                    <span className="text-slate-400">({s.kidAge})</span>
-                    {s.waitlisted && <span className="ml-1.5 font-medium text-amber-700">waitlist</span>}
-                    {s.addedByCoach && <span className="ml-1.5 text-slate-400">· added by coach</span>}
+                    <span className="font-medium text-court-navy/80">{s.kidName}</span>{" "}
+                    <span className="text-court-navy/40">({s.kidAge})</span>
+                    {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
+                    {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
                   </td>
-                  <td className="px-3 py-2 text-slate-600">{s.memberNumber || "—"}</td>
-                  <td className="px-3 py-2 text-slate-600">{s.parentName}</td>
-                  <td className="px-3 py-2 text-slate-600">{s.parentPhone}</td>
+                  <td className="px-3 py-2 text-court-navy/60">{s.memberNumber || "—"}</td>
+                  <td className="px-3 py-2 text-court-navy/60">{s.parentName}</td>
+                  <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
                   <td className="px-3 py-2 text-right">
                     <button
                       onClick={() => removeSignup(s.id)}
@@ -439,7 +439,7 @@ function AddWalkInForm({
   }
 
   return (
-    <form onSubmit={submit} className="mt-2 grid gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-2">
+    <form onSubmit={submit} className="mt-2 grid gap-2.5 rounded-xl border border-court-navy/10 bg-court-cream/50 p-4 sm:grid-cols-2">
       <input placeholder="Child name" value={kidName} onChange={(e) => setKidName(e.target.value)} className={inputClass} />
       <input placeholder="Member # (optional)" value={memberNumber} onChange={(e) => setMemberNumber(e.target.value)} className={inputClass} />
       <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className={inputClass} />
@@ -454,7 +454,7 @@ function AddWalkInForm({
         >
           {submitting ? "Adding…" : "Add"}
         </button>
-        <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-sm text-slate-500 transition hover:bg-slate-100">
+        <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-sm text-court-navy/50 transition hover:bg-court-navy/5">
           Cancel
         </button>
       </div>

@@ -30,15 +30,17 @@ export default function CoachLoginPage() {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15";
+    "w-full rounded-lg border border-court-navy/15 bg-white px-3.5 py-2.5 text-sm shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15";
 
   return (
     <div className="mx-auto mt-4 max-w-sm">
       <div className="mb-6 text-center">
         <span className="font-script text-4xl leading-none text-court-navy">Coach Login</span>
-        <p className="mt-2 text-sm text-slate-500">Manage rosters and clinic cancellations</p>
+        <p className="mt-2 font-display text-sm italic text-court-navy/50">
+          Manage rosters and clinic cancellations
+        </p>
       </div>
-      <form onSubmit={submit} className="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-card">
+      <form onSubmit={submit} className="space-y-3 rounded-2xl border border-court-navy/10 bg-white p-6 shadow-card">
         <input
           type="email"
           placeholder="Email"
