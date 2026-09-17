@@ -11,13 +11,13 @@ by the seed script:
 
 | Day | Clinics | Time | Ages |
 |---|---|---|---|
-| Monday | Monday Clinic | 3:30–4:30pm | 6–10 |
+| Monday | Junior Clinic | 3:30–4:30pm | 6–10 |
 | Tuesday | Super Stars / Junior Clinic | 3:30–4:30pm | 3–6 / 6–10 |
 | Wednesday | Super Stars / Junior Clinic | 3:30–4:30pm | 3–6 / 6–10 |
-| Thursday | Super Stars / Junior Clinic / Teen Clinic | 3:30–4:30pm | 3–6 / 6–10 / 10–15 |
-| Friday | Clinic / Teen Clinic | 3:30–4:30pm | 8–10 / 10–15 |
-| Saturday | Saturday Clinic | 1:00–2:00pm | 6–10 |
-| Sunday | Sunday Clinic (x2) | 10:00–11:00am / 11:00am–12:00pm | 6–10 / 10–15 |
+| Thursday | Super Stars / Junior Clinic / Junior Clinic | 3:30–4:30pm | 3–6 / 6–10 / 10–15 |
+| Friday | Clinic / Junior Clinic | 3:30–4:30pm | 8–10 / 10–15 |
+| Saturday | Junior Clinic | 1:00–2:00pm | 6–10 |
+| Sunday | Junior Clinic (x2) | 10:00–11:00am / 11:00am–12:00pm | 6–10 / 10–15 |
 
 To change the schedule (add a day, rename a clinic, change a time or age
 range), edit `lib/clinics.ts` and re-run `npm run db:seed` — it's safe to

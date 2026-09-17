@@ -7,16 +7,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Seeding clinic schedule...");
   for (const c of CLINIC_SCHEDULE) {
+    // Matched by day/time/age-range rather than name, so renaming a clinic
+    // in CLINIC_SCHEDULE updates the existing row in place instead of
+    // orphaning the old-named row and creating a duplicate.
     const existing = await prisma.clinicTemplate.findFirst({
-      where: { name: c.name, dayOfWeek: c.dayOfWeek, startTime: c.startTime },
+      where: { dayOfWeek: c.dayOfWeek, startTime: c.startTime, ageMin: c.ageMin, ageMax: c.ageMax },
     });
     if (existing) {
       await prisma.clinicTemplate.update({
         where: { id: existing.id },
         data: {
+          name: c.name,
           endTime: c.endTime,
-          ageMin: c.ageMin,
-          ageMax: c.ageMax,
           capacity: c.capacity,
           minSignups: c.minSignups,
           sortOrder: c.sortOrder,

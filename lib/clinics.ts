@@ -18,7 +18,7 @@ export type ClinicDefinition = {
 
 export const CLINIC_SCHEDULE: ClinicDefinition[] = [
   // Monday
-  { name: "Monday Clinic", dayOfWeek: 1, startTime: "15:30", endTime: "16:30", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
+  { name: "Junior Clinic", dayOfWeek: 1, startTime: "15:30", endTime: "16:30", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
 
   // Tuesday
   { name: "Super Stars", dayOfWeek: 2, startTime: "15:30", endTime: "16:30", ageMin: 3, ageMax: 6, capacity: 8, minSignups: 4, sortOrder: 1 },
@@ -31,18 +31,18 @@ export const CLINIC_SCHEDULE: ClinicDefinition[] = [
   // Thursday
   { name: "Super Stars", dayOfWeek: 4, startTime: "15:30", endTime: "16:30", ageMin: 3, ageMax: 6, capacity: 8, minSignups: 4, sortOrder: 1 },
   { name: "Junior Clinic", dayOfWeek: 4, startTime: "15:30", endTime: "16:30", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 2 },
-  { name: "Teen Clinic", dayOfWeek: 4, startTime: "15:30", endTime: "16:30", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 3 },
+  { name: "Junior Clinic", dayOfWeek: 4, startTime: "15:30", endTime: "16:30", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 3 },
 
   // Friday
   { name: "Clinic", dayOfWeek: 5, startTime: "15:30", endTime: "16:30", ageMin: 8, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
-  { name: "Teen Clinic", dayOfWeek: 5, startTime: "15:30", endTime: "16:30", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 2 },
+  { name: "Junior Clinic", dayOfWeek: 5, startTime: "15:30", endTime: "16:30", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 2 },
 
   // Saturday
-  { name: "Saturday Clinic", dayOfWeek: 6, startTime: "13:00", endTime: "14:00", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
+  { name: "Junior Clinic", dayOfWeek: 6, startTime: "13:00", endTime: "14:00", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
 
   // Sunday
-  { name: "Sunday Clinic", dayOfWeek: 0, startTime: "10:00", endTime: "11:00", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
-  { name: "Sunday Clinic", dayOfWeek: 0, startTime: "11:00", endTime: "12:00", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 2 },
+  { name: "Junior Clinic", dayOfWeek: 0, startTime: "10:00", endTime: "11:00", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
+  { name: "Junior Clinic", dayOfWeek: 0, startTime: "11:00", endTime: "12:00", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 2 },
 ];
 
 export const DAY_NAMES = [
