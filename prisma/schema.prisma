@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A recurring weekly clinic slot, e.g. "Super Stars" Tuesdays 3:30-4:30, ages 3-6.
+// This is the template used to generate ClinicSession rows week by week.
+model ClinicTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  dayOfWeek   Int // 0 = Sunday ... 6 = Saturday
+  startTime   String // "15:30" 24h local time
+  endTime     String // "16:30"
+  ageMin      Int
+  ageMax      Int
+  capacity    Int      @default(8)
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  sessions    ClinicSession[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// SQLite has no native enum support, so status/reason are plain strings,
+// validated in application code:
+//   status:             "SCHEDULED" | "CANCELLED"
+//   cancellationReason: "RAIN" | "HEAT" | "LOW_SIGNUPS" | "OTHER"
+
+// One specific occurrence of a ClinicTemplate on a specific date.
+// Generated on demand the first time a given week is viewed.
+model ClinicSession {
+  id                 String         @id @default(cuid())
+  templateId         String
+  template           ClinicTemplate @relation(fields: [templateId], references: [id])
+  date               DateTime // the calendar date of this occurrence (local midnight)
+  capacity           Int
+  status             String         @default("SCHEDULED")
+  cancellationReason String?
+  cancellationNote   String?
+  cancelledAt        DateTime?
+  cancelledBy        String?
+  signups            Signup[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@unique([templateId, date])
+  @@index([date])
+}
+
+model Signup {
+  id            String        @id @default(cuid())
+  sessionId     String
+  session       ClinicSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  parentName    String
+  parentPhone   String
+  parentEmail   String?
+  kidName       String
+  kidAge        Int
+  waitlisted    Boolean       @default(false)
+  addedByCoach  Boolean       @default(false)
+  notes         String?
+  createdAt     DateTime      @default(now())
+
+  @@index([sessionId])
+  @@index([parentPhone])
+}
+
+model Coach {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
