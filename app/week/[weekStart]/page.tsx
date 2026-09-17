@@ -50,7 +50,7 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
             Week of {formatDateLong(weekStart)}
           </h1>
           {isCurrentWeek && (
-            <span className="mt-1 inline-block rounded-full bg-court-ball/60 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-court-greenDark">
+            <span className="mt-1 inline-block rounded-full bg-court-gold px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
               This week
             </span>
           )}
@@ -80,7 +80,7 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
                   }`}
                 >
                   {formatDateLong(new Date(dateKey))}
-                  {dateKey === todayKey && <span className="ml-2 text-court-ball">●</span>}
+                  {dateKey === todayKey && <span className="ml-2 text-court-gold">●</span>}
                 </h2>
                 <div className="h-px flex-1 bg-slate-200" />
               </div>

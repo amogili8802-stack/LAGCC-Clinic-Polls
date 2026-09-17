@@ -9,14 +9,15 @@ const config: Config = {
     extend: {
       colors: {
         court: {
-          green: "#707c4e",
-          greenDark: "#535c3a",
-          greenLight: "#eef1da",
-          navy: "#221f1a",
-          navyLight: "#3d392f",
-          clay: "#b5652f",
+          green: "#4a5a2f",
+          greenDark: "#333f1f",
+          greenLight: "#dbe3c4",
+          navy: "#1a1712",
+          navyLight: "#332e22",
+          clay: "#a8501f",
           clayLight: "#faf1e6",
-          ball: "#dce6a8",
+          gold: "#a67c2e",
+          goldLight: "#f1e6c8",
           cream: "#f7f4ec",
         },
       },
@@ -29,7 +30,7 @@ const config: Config = {
         cardHover: "0 4px 10px rgba(34, 31, 26, 0.07), 0 16px 32px -14px rgba(34, 31, 26, 0.2)",
       },
       backgroundImage: {
-        "court-gradient": "linear-gradient(135deg, #2b271f 0%, #221f1a 55%, #1a1712 100%)",
+        "court-gradient": "linear-gradient(135deg, #221f17 0%, #1a1712 55%, #120f0b 100%)",
       },
     },
   },

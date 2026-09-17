@@ -147,8 +147,8 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
         </div>
         {!isCancelled && (
           <span
-            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
-              isFull ? "bg-amber-100 text-amber-800" : "bg-court-greenLight text-court-greenDark"
+            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-white ${
+              isFull ? "bg-amber-600" : "bg-court-green"
             }`}
           >
             {isFull ? "Full — waitlist open" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}

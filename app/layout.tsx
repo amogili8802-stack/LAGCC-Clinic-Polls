@@ -6,7 +6,7 @@ import Providers from "./providers";
 
 const clubName = process.env.CLUB_NAME || "LAGCC";
 const faviconLetter = (clubName.trim().charAt(0) || "T").toUpperCase();
-const faviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='#221f1a'/><text x='32' y='43' font-family='Georgia, serif' font-size='30' fill='#dce6a8' text-anchor='middle'>${faviconLetter}</text></svg>`;
+const faviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='#1a1712'/><text x='32' y='43' font-family='Georgia, serif' font-size='30' fill='#f7f4ec' text-anchor='middle'>${faviconLetter}</text></svg>`;
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
