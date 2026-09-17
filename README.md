@@ -63,10 +63,15 @@ automatically promoted if a spot opens up.
 
 ## Getting started (local dev)
 
+You'll need a Postgres database to point at — a free one from
+[Neon](https://neon.tech) or [Vercel Postgres](https://vercel.com/storage/postgres)
+takes under a minute to create and works fine for both local dev and
+production (one `DATABASE_URL`, no separate local database to install).
+
 ```bash
 npm install
-cp .env.example .env      # then edit .env — see below
-npm run db:push           # creates the SQLite database from the schema
+cp .env.example .env      # then edit .env — paste in your DATABASE_URL, see below
+npm run db:push           # creates the tables from the schema
 npm run db:seed           # loads the clinic schedule + a coach account
 npm run dev                # http://localhost:3000
 ```
@@ -80,9 +85,14 @@ npm run coach:add -- "Assistant Pro" assistant@lagcc.example "a-strong-password"
 
 ## Environment variables
 
-See [`.env.example`](./.env.example) for the full list. The two that need a
-real account to work in production:
+See [`.env.example`](./.env.example) for the full list. Three need a real
+account to work:
 
+- **`DATABASE_URL`** — a Postgres connection string. Neon and Vercel Postgres
+  both give you one immediately on signup (no credit card). If your host
+  runs your app on serverless functions (Vercel included), use the
+  **pooled** connection string your provider gives you, not the direct one —
+  otherwise you can run out of database connections under normal traffic.
 - **Twilio** (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`)
   — sign up at twilio.com, buy a phone number capable of SMS, and put its
   number (E.164 format, e.g. `+15551234567`) in `TWILIO_FROM_NUMBER`. Without
@@ -94,14 +104,22 @@ real account to work in production:
 ## Deploying
 
 This is a standard Next.js + Prisma app, so it deploys well to Vercel,
-Railway, Render, or any Node host:
+Railway, Render, or any Node host. On Vercel specifically:
 
-1. Switch `DATABASE_URL` to a real Postgres database (SQLite's single file
-   doesn't work well on most serverless hosts) — change the `datasource`
-   provider in `prisma/schema.prisma` from `sqlite` to `postgresql` first.
-2. Set all the environment variables above on the host.
-3. Run `npm run db:push` and `npm run db:seed` once against the production
-   database (most hosts let you run a one-off command, or run it locally
-   pointed at the prod `DATABASE_URL`).
-4. Deploy. Give parents the site's home page URL — it always redirects to
-   the current week.
+1. Push this repo to GitHub (already done) and go to
+   [vercel.com](https://vercel.com) → **Add New → Project** → pick this repo
+   and branch.
+2. Before the first deploy, add the environment variables above in the
+   project's settings (`DATABASE_URL`, `NEXTAUTH_URL` — your `*.vercel.app`
+   URL, `NEXTAUTH_SECRET`, `SEED_COACH_EMAIL`/`PASSWORD`/`NAME`, and the
+   Twilio vars once you have them).
+3. Deploy. Then run the schema + seed once against that same
+   `DATABASE_URL` — easiest from your own machine:
+   ```bash
+   DATABASE_URL="<paste the same value you put in Vercel>" npm run db:push
+   DATABASE_URL="<paste the same value you put in Vercel>" npm run db:seed
+   ```
+4. Give parents the site's home page URL — it always redirects to the
+   current week. Log in as a coach at `/coach/login`.
+
+Every future `git push` to the connected branch redeploys automatically.

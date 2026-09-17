@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -25,8 +25,7 @@ model ClinicTemplate {
   updatedAt   DateTime @updatedAt
 }
 
-// SQLite has no native enum support, so status/reason are plain strings,
-// validated in application code:
+// status/cancellationReason are plain strings, validated in application code:
 //   status:             "SCHEDULED" | "CANCELLED"
 //   cancellationReason: "RAIN" | "HEAT" | "LOW_SIGNUPS" | "OTHER"
 
