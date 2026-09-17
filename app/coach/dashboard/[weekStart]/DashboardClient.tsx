@@ -234,7 +234,7 @@ function SessionPanel({ session }: { session: Session }) {
             {formatTime(session.template.startTime)}–{formatTime(session.template.endTime)}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
               belowMinimum ? "bg-court-goldLight text-court-gold" : "bg-court-navy/[0.06] text-court-navy/70"
@@ -357,69 +357,123 @@ function SessionPanel({ session }: { session: Session }) {
       )}
 
       {session.signups.length > 0 && (
-        <div className="ml-2 mt-4 overflow-hidden rounded-xl border border-court-navy/10">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="bg-court-navy/[0.03] text-xs uppercase tracking-wide text-court-navy/40">
-                <th className="px-3 py-2 font-semibold">Child</th>
-                <th className="px-3 py-2 font-semibold">Member #</th>
-                <th className="px-3 py-2 font-semibold">Parent</th>
-                <th className="px-3 py-2 font-semibold">Phone</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...activeSignups, ...waitlisted].map((s) => (
-                <tr key={s.id} className="border-t border-court-navy/10">
-                  <td className="px-3 py-2">
-                    <span className="font-medium text-court-navy/80">{s.kidName}</span>{" "}
-                    <span className="text-court-navy/40">({s.kidAge})</span>
+        <div className="ml-2 mt-4">
+          {/* Table layout for sm+ screens */}
+          <div className="hidden overflow-hidden rounded-xl border border-court-navy/10 sm:block">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-court-navy/[0.03] text-xs uppercase tracking-wide text-court-navy/40">
+                  <th className="px-3 py-2 font-semibold">Child</th>
+                  <th className="px-3 py-2 font-semibold">Member #</th>
+                  <th className="px-3 py-2 font-semibold">Parent</th>
+                  <th className="px-3 py-2 font-semibold">Phone</th>
+                  <th className="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...activeSignups, ...waitlisted].map((s) => (
+                  <tr key={s.id} className="border-t border-court-navy/10">
+                    <td className="px-3 py-2">
+                      <span className="font-medium text-court-navy/80">{s.kidName}</span>{" "}
+                      <span className="text-court-navy/40">({s.kidAge})</span>
+                      {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
+                      {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁 weekly</span>}
+                      {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
+                    </td>
+                    <td className="px-3 py-2 text-court-navy/60">
+                      {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : s.memberNumber || "—"}
+                    </td>
+                    <td className="px-3 py-2 text-court-navy/60">{s.parentName}</td>
+                    <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        onClick={() => removeSignup(s.id)}
+                        disabled={busy}
+                        className="font-semibold text-red-600 hover:underline disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {lateCancelled.map((s) => (
+                  <tr key={s.id} className="border-t border-court-navy/10 bg-red-50/60">
+                    <td className="px-3 py-2">
+                      <span className="font-medium text-red-700">
+                        {s.kidName} - cancelled less than 24 hours
+                      </span>{" "}
+                      <span className="text-red-700/50">({s.kidAge})</span>
+                    </td>
+                    <td className="px-3 py-2 text-red-700/70">
+                      {s.isNonMember ? "Non-member" : s.memberNumber || "—"}
+                    </td>
+                    <td className="px-3 py-2 text-red-700/70">{s.parentName}</td>
+                    <td className="px-3 py-2 text-red-700/70">{s.parentPhone}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        onClick={() => dismissCancellation(s.id)}
+                        disabled={busy}
+                        className="font-semibold text-red-700/60 hover:underline disabled:opacity-40"
+                      >
+                        Dismiss
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Stacked cards for mobile */}
+          <div className="space-y-2 sm:hidden">
+            {[...activeSignups, ...waitlisted].map((s) => (
+              <div key={s.id} className="rounded-xl border border-court-navy/10 p-3 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-court-navy/80">
+                    {s.kidName} <span className="font-normal text-court-navy/40">({s.kidAge})</span>
                     {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
-                    {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁 weekly</span>}
-                    {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
-                  </td>
-                  <td className="px-3 py-2 text-court-navy/60">
-                    {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : s.memberNumber || "—"}
-                  </td>
-                  <td className="px-3 py-2 text-court-navy/60">{s.parentName}</td>
-                  <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      onClick={() => removeSignup(s.id)}
-                      disabled={busy}
-                      className="font-semibold text-red-600 hover:underline disabled:opacity-40"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {lateCancelled.map((s) => (
-                <tr key={s.id} className="border-t border-court-navy/10 bg-red-50/60">
-                  <td className="px-3 py-2">
-                    <span className="font-medium text-red-700">
-                      {s.kidName} - cancelled less than 24 hours
-                    </span>{" "}
-                    <span className="text-red-700/50">({s.kidAge})</span>
-                  </td>
-                  <td className="px-3 py-2 text-red-700/70">
-                    {s.isNonMember ? "Non-member" : s.memberNumber || "—"}
-                  </td>
-                  <td className="px-3 py-2 text-red-700/70">{s.parentName}</td>
-                  <td className="px-3 py-2 text-red-700/70">{s.parentPhone}</td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      onClick={() => dismissCancellation(s.id)}
-                      disabled={busy}
-                      className="font-semibold text-red-700/60 hover:underline disabled:opacity-40"
-                    >
-                      Dismiss
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁</span>}
+                  </p>
+                  <button
+                    onClick={() => removeSignup(s.id)}
+                    disabled={busy}
+                    className="shrink-0 font-semibold text-red-600 hover:underline disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <p className="mt-1 text-court-navy/60">
+                  {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : `Member #${s.memberNumber || "—"}`}
+                </p>
+                <p className="text-court-navy/60">
+                  {s.parentName} · {s.parentPhone}
+                </p>
+              </div>
+            ))}
+            {lateCancelled.map((s) => (
+              <div key={s.id} className="rounded-xl border border-court-navy/10 bg-red-50/60 p-3 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-red-700">
+                    {s.kidName} - cancelled less than 24 hours{" "}
+                    <span className="font-normal text-red-700/50">({s.kidAge})</span>
+                  </p>
+                  <button
+                    onClick={() => dismissCancellation(s.id)}
+                    disabled={busy}
+                    className="shrink-0 font-semibold text-red-700/60 hover:underline disabled:opacity-40"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+                <p className="mt-1 text-red-700/70">
+                  {s.isNonMember ? "Non-member" : `Member #${s.memberNumber || "—"}`}
+                </p>
+                <p className="text-red-700/70">
+                  {s.parentName} · {s.parentPhone}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -504,7 +558,7 @@ function AddWalkInForm({
       <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className={inputClass} />
       <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className={inputClass} />
       <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={inputClass} />
-      <label className="col-span-2 flex items-center gap-2 text-xs font-medium text-court-navy/70">
+      <label className="flex items-center gap-2 text-xs font-medium text-court-navy/70 sm:col-span-2">
         <input
           type="checkbox"
           checked={isNonMember}
@@ -513,7 +567,7 @@ function AddWalkInForm({
         />
         Non-member
       </label>
-      <label className="col-span-2 flex items-center gap-2 text-xs font-medium text-court-navy/70">
+      <label className="flex items-center gap-2 text-xs font-medium text-court-navy/70 sm:col-span-2">
         <input
           type="checkbox"
           checked={recurring}
@@ -522,8 +576,8 @@ function AddWalkInForm({
         />
         🔁 Sign up automatically every week until cancelled
       </label>
-      {error && <p className="col-span-2 text-sm font-medium text-red-600">{error}</p>}
-      <div className="col-span-2 flex gap-2 pt-1">
+      {error && <p className="text-sm font-medium text-red-600 sm:col-span-2">{error}</p>}
+      <div className="flex gap-2 pt-1 sm:col-span-2">
         <button
           type="submit"
           disabled={submitting}
