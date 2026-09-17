@@ -18,6 +18,7 @@ model ClinicTemplate {
   ageMin      Int
   ageMax      Int
   capacity    Int      @default(8)
+  minSignups  Int      @default(4)
   sortOrder   Int      @default(0)
   active      Boolean  @default(true)
   sessions    ClinicSession[]
@@ -37,6 +38,7 @@ model ClinicSession {
   template           ClinicTemplate @relation(fields: [templateId], references: [id])
   date               DateTime // the calendar date of this occurrence (local midnight)
   capacity           Int
+  minSignups         Int            @default(4)
   status             String         @default("SCHEDULED")
   cancellationReason String?
   cancellationNote   String?
@@ -59,6 +61,7 @@ model Signup {
   parentEmail   String?
   kidName       String
   kidAge        Int
+  memberNumber  String?
   waitlisted    Boolean       @default(false)
   addedByCoach  Boolean       @default(false)
   notes         String?

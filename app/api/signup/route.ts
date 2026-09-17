@@ -7,7 +7,7 @@ import { formatDateLong } from "@/lib/weeks";
 
 const clubName = process.env.CLUB_NAME || "The club";
 
-type KidInput = { name: string; age: number };
+type KidInput = { name: string; age: number; memberNumber: string };
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -27,6 +27,9 @@ export async function POST(req: NextRequest) {
   for (const kid of kids) {
     if (!kid.name?.trim() || typeof kid.age !== "number" || Number.isNaN(kid.age) || kid.age < 0 || kid.age > 18) {
       return NextResponse.json({ error: "Each child needs a name and a valid age." }, { status: 400 });
+    }
+    if (!kid.memberNumber?.trim()) {
+      return NextResponse.json({ error: "Each child needs a member number." }, { status: 400 });
     }
   }
 
@@ -50,6 +53,7 @@ export async function POST(req: NextRequest) {
           parentPhone: parentPhone.trim(),
           parentEmail: parentEmail?.trim() || null,
           kidName: kid.name.trim(),
+          memberNumber: kid.memberNumber.trim(),
           kidAge: kid.age,
           waitlisted: activeCount + i >= session.capacity,
         },

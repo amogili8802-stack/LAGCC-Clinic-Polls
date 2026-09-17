@@ -21,9 +21,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!session) return NextResponse.json({ error: "Session not found." }, { status: 404 });
 
   const rows = [
-    ["Child", "Age", "Parent", "Phone", "Email", "Status"],
+    ["Child", "Member #", "Age", "Parent", "Phone", "Email", "Status"],
     ...session.signups.map((s) => [
       s.kidName,
+      s.memberNumber || "",
       String(s.kidAge),
       s.parentName,
       s.parentPhone,

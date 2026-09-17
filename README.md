@@ -23,24 +23,35 @@ To change the schedule (add a day, rename a clinic, change a time or age
 range), edit `lib/clinics.ts` and re-run `npm run db:seed` — it's safe to
 run repeatedly since it upserts by name/day/time.
 
-Default capacity per clinic is 8 kids (editable per-week by a coach from the
-dashboard); once full, additional sign-ups go on a waitlist and are
-automatically promoted if a spot opens up.
+Default capacity per clinic is 4–8 kids (both editable per-session by a
+coach from the dashboard): once full, additional sign-ups go on a waitlist
+and are automatically promoted if a spot opens up; if a clinic still hasn't
+hit its minimum by 8pm the night before, it's automatically cancelled and
+everyone signed up gets a text (see **Auto-cancellation for low sign-ups**
+below).
 
 ## What's built
 
 - **Public sign-up pages** at `/week/YYYY-MM-DD` (one Monday-start week at a
   time, with prev/next navigation). Parents fill in their name and phone
-  number once and can add multiple kids in the same sign-up.
+  number once and can add multiple kids in the same sign-up, each with their
+  own member number.
 - **Waitlisting** once a clinic hits capacity.
+- **Auto-cancellation for low sign-ups** — every clinic has a minimum
+  (default 4) and maximum (default 8), both coach-editable per session. A
+  daily job checks every session happening the next day; if it's under its
+  minimum by 8pm, it's cancelled automatically with reason "Not enough
+  sign-ups" and everyone signed up (including the waitlist) gets a text.
+  See **Deploying** for the one-time cron setup this needs.
 - **Self-serve management** — a "Manage my sign-ups" panel lets a parent look
   up everything they've signed up for by phone number and cancel it
   themselves, without needing a coach.
 - **Coach login** (`/coach/login`, credentials-based, coach accounts live only
   in the database — there's no public sign-up for coach accounts).
-- **Coach dashboard** (`/coach/dashboard`) per week: view every roster,
-  add a walk-in/phone sign-up, remove a kid, edit a clinic's capacity,
-  export a roster as CSV, and cancel or reopen a clinic.
+- **Coach dashboard** (`/coach/dashboard`) per week: view every roster
+  (including each kid's member number), add a walk-in/phone sign-up, remove
+  a kid, edit a clinic's minimum and maximum, export a roster as CSV, and
+  cancel or reopen a clinic.
 - **Cancellation reasons**: Rain, Extreme heat, Not enough sign-ups, Other
   (with an optional free-text note) — chosen when a coach cancels a clinic.
 - **Text message notifications** via Twilio:
@@ -52,7 +63,8 @@ automatically promoted if a spot opens up.
 
 ## Ideas not yet built (worth adding later)
 
-- Automated day-before reminder texts (would need a scheduled job/cron).
+- Automated day-before reminder texts (the cron infrastructure from
+  auto-cancellation could easily grow a second scheduled check for this).
 - Email notifications alongside text (email field is already collected).
 - Multiple named coach roles/permissions (currently any coach account can do
   anything).
@@ -100,6 +112,16 @@ account to work:
   instead of sending them.
 - **`NEXTAUTH_SECRET`** — required for coach login sessions. Generate one
   with `openssl rand -base64 32`.
+- **`CRON_SECRET`** — optional but recommended once deployed. If set,
+  Vercel automatically sends it as a bearer token when it triggers the
+  auto-cancellation job, and the job rejects any request without it — so
+  nobody else can trigger a mass-cancellation by hitting the URL. Generate
+  one the same way as `NEXTAUTH_SECRET` and add it in Vercel's project
+  settings (it doesn't need to be in your local `.env`).
+
+The database schema and clinic schedule sync themselves automatically on
+every `npm run build` (see `package.json`'s `build` script) — there's no
+separate migration step to remember, locally or in production.
 
 ## Deploying
 
@@ -111,15 +133,21 @@ Railway, Render, or any Node host. On Vercel specifically:
    and branch.
 2. Before the first deploy, add the environment variables above in the
    project's settings (`DATABASE_URL`, `NEXTAUTH_URL` — your `*.vercel.app`
-   URL, `NEXTAUTH_SECRET`, `SEED_COACH_EMAIL`/`PASSWORD`/`NAME`, and the
-   Twilio vars once you have them).
-3. Deploy. Then run the schema + seed once against that same
-   `DATABASE_URL` — easiest from your own machine:
-   ```bash
-   DATABASE_URL="<paste the same value you put in Vercel>" npm run db:push
-   DATABASE_URL="<paste the same value you put in Vercel>" npm run db:seed
-   ```
+   URL, `NEXTAUTH_SECRET`, `CRON_SECRET`, `SEED_COACH_EMAIL`/`PASSWORD`/`NAME`,
+   and the Twilio vars once you have them).
+3. Deploy. The build itself creates the tables and loads the clinic
+   schedule + coach account — no manual step needed.
 4. Give parents the site's home page URL — it always redirects to the
    current week. Log in as a coach at `/coach/login`.
 
 Every future `git push` to the connected branch redeploys automatically.
+
+### Auto-cancellation cron job
+
+`vercel.json` schedules `/api/cron/auto-cancel-low-signups` to run once a
+day at 4:00 UTC (8pm Pacific Standard Time; Vercel Cron doesn't shift for
+daylight saving, so it lands around 9pm Pacific in the summer). If your
+club is in a different timezone, edit the `schedule` in `vercel.json`
+(cron syntax, always UTC) to `8 hours before your local midnight-shifted
+clinic day` — e.g. 8pm Eastern is `0 1 * * *`. Vercel's free Hobby plan
+allows cron jobs that run at most once a day, which this fits.

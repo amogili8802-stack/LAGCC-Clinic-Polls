@@ -35,11 +35,8 @@ export default function CoachLoginPage() {
   return (
     <div className="mx-auto mt-4 max-w-sm">
       <div className="mb-6 text-center">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-court-navy text-2xl shadow-sm">
-          🎾
-        </span>
-        <h1 className="mt-3 text-xl font-extrabold tracking-tight text-court-navy">Coach Login</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage rosters and clinic cancellations</p>
+        <span className="font-script text-4xl leading-none text-court-navy">Coach Login</span>
+        <p className="mt-2 text-sm text-slate-500">Manage rosters and clinic cancellations</p>
       </div>
       <form onSubmit={submit} className="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-card">
         <input

@@ -18,6 +18,7 @@ async function main() {
           ageMin: c.ageMin,
           ageMax: c.ageMax,
           capacity: c.capacity,
+          minSignups: c.minSignups,
           sortOrder: c.sortOrder,
           active: true,
         },

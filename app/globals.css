@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
-  background-image: radial-gradient(circle at 20% 0%, #eef6f0 0%, transparent 45%),
-    radial-gradient(circle at 100% 30%, #eef3fb 0%, transparent 40%);
+  @apply bg-court-cream text-court-navy antialiased;
+  background-image: radial-gradient(circle at 15% 0%, #f2efe2 0%, transparent 45%),
+    radial-gradient(circle at 100% 25%, #eee9d8 0%, transparent 42%);
   background-attachment: fixed;
 }
 
 ::selection {
-  background-color: #d4f36a;
-  color: #0f2744;
+  background-color: #dce6a8;
+  color: #221f1a;
 }

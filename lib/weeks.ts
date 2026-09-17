@@ -90,6 +90,7 @@ export async function ensureAndGetWeekSessions(weekStart: Date) {
         templateId: template.id,
         date,
         capacity: template.capacity,
+        minSignups: template.minSignups,
       },
     });
   }

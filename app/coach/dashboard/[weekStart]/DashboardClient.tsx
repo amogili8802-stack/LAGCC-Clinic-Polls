@@ -10,6 +10,7 @@ type Signup = {
   id: string;
   kidName: string;
   kidAge: number;
+  memberNumber: string | null;
   parentName: string;
   parentPhone: string;
   parentEmail: string | null;
@@ -22,6 +23,7 @@ type Session = {
   id: string;
   date: string;
   capacity: number;
+  minSignups: number;
   status: string;
   cancellationReason?: string | null;
   cancellationNote?: string | null;
@@ -120,10 +122,12 @@ function SessionPanel({ session }: { session: Session }) {
   const [note, setNote] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [capacity, setCapacity] = useState(session.capacity);
+  const [minSignups, setMinSignups] = useState(session.minSignups);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted);
   const waitlisted = session.signups.filter((s) => s.waitlisted);
   const isCancelled = session.status === "CANCELLED";
+  const belowMinimum = !isCancelled && activeSignups.length < session.minSignups;
 
   async function refresh() {
     window.location.reload();
@@ -172,15 +176,20 @@ function SessionPanel({ session }: { session: Session }) {
     }
   }
 
-  async function saveCapacity() {
+  async function saveLimits() {
     setBusy(true);
     try {
-      await fetch(`/api/coach/session/${session.id}/capacity`, {
+      const res = await fetch(`/api/coach/session/${session.id}/capacity`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ capacity }),
+        body: JSON.stringify({ capacity, minSignups }),
       });
-      await refresh();
+      if (res.ok) {
+        await refresh();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to save.");
+      }
     } finally {
       setBusy(false);
     }
@@ -202,9 +211,14 @@ function SessionPanel({ session }: { session: Session }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          <span
+            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
+              belowMinimum ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-600"
+            }`}
+          >
             {activeSignups.length}/{session.capacity} signed up
             {waitlisted.length > 0 && ` · +${waitlisted.length} waitlist`}
+            {belowMinimum && ` · below min (${session.minSignups})`}
           </span>
           <a
             href={`/api/coach/session/${session.id}/roster`}
@@ -281,24 +295,42 @@ function SessionPanel({ session }: { session: Session }) {
         </form>
       )}
 
-      <div className="ml-2 mt-4 flex items-center gap-2 text-xs text-slate-500">
-        <label className="font-medium">Capacity:</label>
-        <input
-          type="number"
-          min={1}
-          max={100}
-          value={capacity}
-          onChange={(e) => setCapacity(parseInt(e.target.value, 10) || 1)}
-          className="w-16 rounded-lg border border-slate-200 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
-        />
+      <div className="ml-2 mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <label className="font-medium">Min to run:</label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={minSignups}
+            onChange={(e) => setMinSignups(parseInt(e.target.value, 10) || 0)}
+            className="w-14 rounded-lg border border-slate-200 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+          />
+        </span>
+        <span className="flex items-center gap-1.5">
+          <label className="font-medium">Max capacity:</label>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={capacity}
+            onChange={(e) => setCapacity(parseInt(e.target.value, 10) || 1)}
+            className="w-14 rounded-lg border border-slate-200 px-2 py-1 shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+          />
+        </span>
         <button
-          onClick={saveCapacity}
-          disabled={busy || capacity === session.capacity}
+          onClick={saveLimits}
+          disabled={busy || (capacity === session.capacity && minSignups === session.minSignups)}
           className="font-semibold text-court-navy hover:underline disabled:opacity-40"
         >
           Save
         </button>
       </div>
+      {!isCancelled && (
+        <p className="ml-2 mt-1 text-xs text-slate-400">
+          Auto-cancels at 8pm the day before if under {session.minSignups} sign-ups.
+        </p>
+      )}
 
       {session.signups.length > 0 && (
         <div className="ml-2 mt-4 overflow-hidden rounded-xl border border-slate-100">
@@ -306,6 +338,7 @@ function SessionPanel({ session }: { session: Session }) {
             <thead>
               <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-3 py-2 font-semibold">Child</th>
+                <th className="px-3 py-2 font-semibold">Member #</th>
                 <th className="px-3 py-2 font-semibold">Parent</th>
                 <th className="px-3 py-2 font-semibold">Phone</th>
                 <th className="px-3 py-2"></th>
@@ -320,6 +353,7 @@ function SessionPanel({ session }: { session: Session }) {
                     {s.waitlisted && <span className="ml-1.5 font-medium text-amber-700">waitlist</span>}
                     {s.addedByCoach && <span className="ml-1.5 text-slate-400">· added by coach</span>}
                   </td>
+                  <td className="px-3 py-2 text-slate-600">{s.memberNumber || "—"}</td>
                   <td className="px-3 py-2 text-slate-600">{s.parentName}</td>
                   <td className="px-3 py-2 text-slate-600">{s.parentPhone}</td>
                   <td className="px-3 py-2 text-right">
@@ -364,6 +398,7 @@ function AddWalkInForm({
   onClose: () => void;
 }) {
   const [kidName, setKidName] = useState("");
+  const [memberNumber, setMemberNumber] = useState("");
   const [kidAge, setKidAge] = useState("");
   const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
@@ -383,7 +418,14 @@ function AddWalkInForm({
       const res = await fetch("/api/coach/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, kidName, kidAge: age, parentName, parentPhone }),
+        body: JSON.stringify({
+          sessionId,
+          kidName,
+          memberNumber: memberNumber.trim() || undefined,
+          kidAge: age,
+          parentName,
+          parentPhone,
+        }),
       });
       if (res.ok) {
         onDone();
@@ -399,6 +441,7 @@ function AddWalkInForm({
   return (
     <form onSubmit={submit} className="mt-2 grid gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-2">
       <input placeholder="Child name" value={kidName} onChange={(e) => setKidName(e.target.value)} className={inputClass} />
+      <input placeholder="Member # (optional)" value={memberNumber} onChange={(e) => setMemberNumber(e.target.value)} className={inputClass} />
       <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className={inputClass} />
       <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className={inputClass} />
       <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={inputClass} />

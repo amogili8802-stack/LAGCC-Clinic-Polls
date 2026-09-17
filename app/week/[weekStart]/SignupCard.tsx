@@ -34,7 +34,7 @@ const REASON_LABELS: Record<string, string> = {
   OTHER: "Cancelled",
 };
 
-type KidRow = { name: string; age: string };
+type KidRow = { name: string; age: string; memberNumber: string };
 
 export default function SignupCard({ session }: { session: SessionForCard }) {
   const [open, setOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
   const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [parentEmail, setParentEmail] = useState("");
-  const [kids, setKids] = useState<KidRow[]>([{ name: "", age: "" }]);
+  const [kids, setKids] = useState<KidRow[]>([{ name: "", age: "", memberNumber: "" }]);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted);
   const waitlisted = session.signups.filter((s) => s.waitlisted);
@@ -57,7 +57,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
   }
 
   function addKidRow() {
-    setKids((prev) => [...prev, { name: "", age: "" }]);
+    setKids((prev) => [...prev, { name: "", age: "", memberNumber: "" }]);
   }
 
   function removeKidRow(i: number) {
@@ -70,7 +70,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
     setSuccess(null);
 
     const cleanedKids = kids
-      .map((k) => ({ name: k.name.trim(), age: parseInt(k.age, 10) }))
+      .map((k) => ({ name: k.name.trim(), age: parseInt(k.age, 10), memberNumber: k.memberNumber.trim() }))
       .filter((k) => k.name.length > 0);
 
     if (cleanedKids.length === 0) {
@@ -79,6 +79,10 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
     }
     if (cleanedKids.some((k) => Number.isNaN(k.age) || k.age < 0 || k.age > 18)) {
       setError("Enter a valid age for each child.");
+      return;
+    }
+    if (cleanedKids.some((k) => k.memberNumber.length === 0)) {
+      setError("Enter a member number for each child.");
       return;
     }
     if (!parentName.trim() || !parentPhone.trim()) {
@@ -112,7 +116,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
       setParentName("");
       setParentPhone("");
       setParentEmail("");
-      setKids([{ name: "", age: "" }]);
+      setKids([{ name: "", age: "", memberNumber: "" }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -122,7 +126,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition focus:border-court-green focus:outline-none focus:ring-2 focus:ring-court-green/20";
+    "rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm transition focus:border-court-green focus:outline-none focus:ring-2 focus:ring-court-green/20";
 
   return (
     <div
@@ -191,7 +195,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                   placeholder="Parent/guardian name"
                   value={parentName}
                   onChange={(e) => setParentName(e.target.value)}
-                  className={inputClass}
+                  className={`w-full ${inputClass}`}
                   required
                 />
                 <input
@@ -199,7 +203,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                   placeholder="Cell phone (for text updates)"
                   value={parentPhone}
                   onChange={(e) => setParentPhone(e.target.value)}
-                  className={inputClass}
+                  className={`w-full ${inputClass}`}
                   required
                 />
               </div>
@@ -208,38 +212,47 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
                 placeholder="Email (optional)"
                 value={parentEmail}
                 onChange={(e) => setParentEmail(e.target.value)}
-                className={inputClass}
+                className={`w-full ${inputClass}`}
               />
 
               <div className="space-y-2 border-t border-slate-200/80 pt-3">
                 {kids.map((kid, i) => (
-                  <div key={i} className="flex gap-2">
+                  <div key={i} className="space-y-1.5 rounded-lg border border-slate-200 bg-white p-2.5">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Child's name"
+                        value={kid.name}
+                        onChange={(e) => updateKid(i, "name", e.target.value)}
+                        className={`flex-1 ${inputClass}`}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Age"
+                        min={0}
+                        max={18}
+                        value={kid.age}
+                        onChange={(e) => updateKid(i, "age", e.target.value)}
+                        className={`w-20 ${inputClass}`}
+                      />
+                      {kids.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeKidRow(i)}
+                          className="px-2 text-sm text-slate-400 transition hover:text-red-600"
+                          aria-label="Remove child"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="text"
-                      placeholder="Child's name"
-                      value={kid.name}
-                      onChange={(e) => updateKid(i, "name", e.target.value)}
-                      className={`flex-1 ${inputClass}`}
+                      placeholder="Member #"
+                      value={kid.memberNumber}
+                      onChange={(e) => updateKid(i, "memberNumber", e.target.value)}
+                      className={`w-full ${inputClass}`}
                     />
-                    <input
-                      type="number"
-                      placeholder="Age"
-                      min={0}
-                      max={18}
-                      value={kid.age}
-                      onChange={(e) => updateKid(i, "age", e.target.value)}
-                      className={`w-20 ${inputClass}`}
-                    />
-                    {kids.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeKidRow(i)}
-                        className="px-2 text-sm text-slate-400 transition hover:text-red-600"
-                        aria-label="Remove child"
-                      >
-                        ✕
-                      </button>
-                    )}
                   </div>
                 ))}
                 <button
