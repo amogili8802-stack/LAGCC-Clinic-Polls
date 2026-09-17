@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   if (!phone) return NextResponse.json({ error: "Phone number is required." }, { status: 400 });
 
   const signups = await prisma.signup.findMany({
-    where: { session: { date: { gte: todayUTC() } } },
+    where: { session: { date: { gte: todayUTC() } }, cancelledAt: null },
     include: { session: { include: { template: true } } },
     orderBy: { session: { date: "asc" } },
   });

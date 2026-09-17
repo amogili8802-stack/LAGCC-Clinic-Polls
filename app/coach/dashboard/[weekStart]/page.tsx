@@ -30,7 +30,11 @@ export default async function CoachWeekDashboard({ params }: { params: Promise<{
       sessions={sessions.map((s) => ({
         ...s,
         date: s.date.toISOString(),
-        signups: s.signups.map((sg) => ({ ...sg, createdAt: sg.createdAt.toISOString() })),
+        signups: s.signups.map((sg) => ({
+          ...sg,
+          createdAt: sg.createdAt.toISOString(),
+          cancelledAt: sg.cancelledAt ? sg.cancelledAt.toISOString() : null,
+        })),
       }))}
     />
   );

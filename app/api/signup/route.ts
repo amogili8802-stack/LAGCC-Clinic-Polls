@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const activeCount = session.signups.filter((s) => !s.waitlisted).length;
+  const activeCount = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt).length;
 
   const created = await prisma.$transaction(
     kids.map((kid, i) =>

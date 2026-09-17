@@ -69,6 +69,8 @@ model Signup {
   addedByCoach      Boolean          @default(false)
   notes             String?
   createdAt         DateTime         @default(now())
+  cancelledAt       DateTime?
+  lateCancellation  Boolean          @default(false)
 
   @@index([sessionId])
   @@index([parentPhone])

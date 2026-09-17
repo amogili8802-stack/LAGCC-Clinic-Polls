@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const cancelled: string[] = [];
   for (const session of sessions) {
-    const activeCount = session.signups.filter((s) => !s.waitlisted).length;
+    const activeCount = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt).length;
     if (activeCount < session.minSignups) {
       const result = await cancelSessionAndNotify({
         sessionId: session.id,

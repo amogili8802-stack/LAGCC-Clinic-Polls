@@ -13,9 +13,12 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
   await prisma.signup.delete({ where: { id } });
 
-  if (!signup.waitlisted) {
+  // Skip promotion if this signup was already soft-cancelled — the
+  // self-serve cancel route already promoted the next waitlisted kid at
+  // that point, so doing it again here would double-promote.
+  if (!signup.waitlisted && !signup.cancelledAt) {
     const nextInLine = await prisma.signup.findFirst({
-      where: { sessionId: signup.sessionId, waitlisted: true },
+      where: { sessionId: signup.sessionId, waitlisted: true, cancelledAt: null },
       orderBy: { createdAt: "asc" },
     });
     if (nextInLine) {

@@ -18,6 +18,8 @@ type Signup = {
   waitlisted: boolean;
   addedByCoach: boolean;
   createdAt: string;
+  cancelledAt: string | null;
+  lateCancellation: boolean;
 };
 
 type Session = {
@@ -125,8 +127,9 @@ function SessionPanel({ session }: { session: Session }) {
   const [capacity, setCapacity] = useState(session.capacity);
   const [minSignups, setMinSignups] = useState(session.minSignups);
 
-  const activeSignups = session.signups.filter((s) => !s.waitlisted);
-  const waitlisted = session.signups.filter((s) => s.waitlisted);
+  const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
+  const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
+  const lateCancelled = session.signups.filter((s) => s.cancelledAt && s.lateCancellation);
   const isCancelled = session.status === "CANCELLED";
   const belowMinimum = !isCancelled && activeSignups.length < session.minSignups;
 
@@ -136,6 +139,17 @@ function SessionPanel({ session }: { session: Session }) {
 
   async function removeSignup(id: string) {
     if (!confirm("Remove this child from the roster?")) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/coach/signup/${id}`, { method: "DELETE" });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function dismissCancellation(id: string) {
+    if (!confirm("Clear this cancellation record? Only do this once billing is resolved.")) return;
     setBusy(true);
     try {
       await fetch(`/api/coach/signup/${id}`, { method: "DELETE" });
@@ -365,6 +379,28 @@ function SessionPanel({ session }: { session: Session }) {
                       className="font-semibold text-red-600 hover:underline disabled:opacity-40"
                     >
                       Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {lateCancelled.map((s) => (
+                <tr key={s.id} className="border-t border-court-navy/10 bg-red-50/60">
+                  <td className="px-3 py-2">
+                    <span className="font-medium text-red-700">
+                      {s.kidName} - cancelled less than 24 hours
+                    </span>{" "}
+                    <span className="text-red-700/50">({s.kidAge})</span>
+                  </td>
+                  <td className="px-3 py-2 text-red-700/70">{s.memberNumber || "—"}</td>
+                  <td className="px-3 py-2 text-red-700/70">{s.parentName}</td>
+                  <td className="px-3 py-2 text-red-700/70">{s.parentPhone}</td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      onClick={() => dismissCancellation(s.id)}
+                      disabled={busy}
+                      className="font-semibold text-red-700/60 hover:underline disabled:opacity-40"
+                    >
+                      Dismiss
                     </button>
                   </td>
                 </tr>

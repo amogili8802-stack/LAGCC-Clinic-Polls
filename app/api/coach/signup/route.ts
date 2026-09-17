@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   });
   if (!session) return NextResponse.json({ error: "Session not found." }, { status: 404 });
 
-  const activeCount = session.signups.filter((s) => !s.waitlisted).length;
+  const activeCount = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt).length;
   const waitlisted = !skipWaitlist && activeCount >= session.capacity;
 
   const signup = await prisma.signup.create({

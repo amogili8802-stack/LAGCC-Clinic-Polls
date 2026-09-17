@@ -108,6 +108,10 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
                     session={{
                       ...session,
                       date: session.date.toISOString(),
+                      signups: session.signups.map((sg) => ({
+                        ...sg,
+                        cancelledAt: sg.cancelledAt ? sg.cancelledAt.toISOString() : null,
+                      })),
                     }}
                   />
                 ))}

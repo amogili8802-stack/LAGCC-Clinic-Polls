@@ -9,6 +9,7 @@ type Signup = {
   kidAge: number;
   waitlisted: boolean;
   recurringSignupId?: string | null;
+  cancelledAt?: string | null;
 };
 
 type SessionForCard = {
@@ -53,8 +54,8 @@ export default function SignupCard({
   const [parentEmail, setParentEmail] = useState("");
   const [kids, setKids] = useState<KidRow[]>([{ name: "", age: "", memberNumber: "", recurring: false }]);
 
-  const activeSignups = session.signups.filter((s) => !s.waitlisted);
-  const waitlisted = session.signups.filter((s) => s.waitlisted);
+  const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
+  const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
   const spotsLeft = Math.max(0, session.capacity - activeSignups.length);
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";

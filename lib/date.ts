@@ -187,3 +187,25 @@ export function formatSignupCutoff(sessionDate: Date): string {
 export function offsetFromMonday(dayOfWeek: number): number {
   return (dayOfWeek + 6) % 7;
 }
+
+// The actual club-local moment a clinic starts, combining its calendar date
+// with its "HH:MM" start time — distinct from signupCutoffFor, which is a
+// fixed 8pm-the-night-before regardless of what time the clinic itself runs.
+export function sessionStartAt(sessionDate: Date, startTime: string): Date {
+  const [hourStr, minuteStr] = startTime.split(":");
+  return zonedWallTimeToUTC(
+    sessionDate.getUTCFullYear(),
+    sessionDate.getUTCMonth(),
+    sessionDate.getUTCDate(),
+    parseInt(hourStr, 10),
+    parseInt(minuteStr, 10),
+    CLUB_TIMEZONE
+  );
+}
+
+// Club policy: cancelling within 24 hours of the clinic's actual start
+// time still incurs a charge. Coaches see these flagged on the roster.
+export function isLateCancellation(sessionDate: Date, startTime: string, now: Date = new Date()): boolean {
+  const start = sessionStartAt(sessionDate, startTime);
+  return now.getTime() > start.getTime() - 24 * 60 * 60 * 1000;
+}

@@ -72,6 +72,15 @@ below).
 - **Self-serve management** — a "Manage my sign-ups" panel lets a parent look
   up everything they've signed up for by phone number and cancel it
   themselves, without needing a coach.
+- **Late-cancellation tracking (24-hour policy)** — per club policy, cancelling
+  a sign-up less than 24 hours before the clinic's start time still incurs a
+  charge. A self-serve cancellation made 24+ hours ahead simply removes the
+  sign-up, same as before. One made within 24 hours is kept on record and
+  flagged in red on that clinic's roster on the coach dashboard (e.g. "Peter -
+  cancelled less than 24 hours") so the coach knows to bill for it; a
+  "Dismiss" button on that row clears the record once billing is resolved. It
+  also shows up in the CSV export as "Cancelled (late — still billed)". Early
+  cancellations don't appear on the roster or CSV at all.
 - **Coach login** (`/coach/login`, credentials-based, coach accounts live only
   in the database — there's no public sign-up for coach accounts).
 - **Coach dashboard** (`/coach/dashboard`) per week: view every roster
@@ -99,7 +108,9 @@ below).
   see the "🔁 weekly" tag on a roster and add one via the walk-in form, but
   stopping someone's recurring sign-up on their behalf currently has to go
   through the parent's own self-serve phone lookup).
-- Payment/billing integration if clinics ever need to be paid per session.
+- Payment/billing integration if clinics ever need to be paid per session —
+  today the app only flags late cancellations for a coach to bill manually,
+  it doesn't charge anyone itself.
 
 ## Getting started (local dev)
 

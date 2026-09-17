@@ -41,7 +41,7 @@ async function syncRecurringSignupsForWeek(
     });
     if (!session || session.status === "CANCELLED") continue;
 
-    let activeCount = session.signups.filter((s) => !s.waitlisted).length;
+    let activeCount = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt).length;
 
     for (const r of recurringForTemplate) {
       // Skip if this recurring subscription already created a signup here,

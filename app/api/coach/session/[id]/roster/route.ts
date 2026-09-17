@@ -20,17 +20,22 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   });
   if (!session) return NextResponse.json({ error: "Session not found." }, { status: 404 });
 
+  // Early (24h+ notice) cancellations are dropped entirely; late
+  // cancellations (billable, per club policy) stay on the roster so the
+  // CSV can be used for billing paperwork.
   const rows = [
     ["Child", "Member #", "Age", "Parent", "Phone", "Email", "Status"],
-    ...session.signups.map((s) => [
-      s.kidName,
-      s.memberNumber || "",
-      String(s.kidAge),
-      s.parentName,
-      s.parentPhone,
-      s.parentEmail || "",
-      s.waitlisted ? "Waitlist" : "Confirmed",
-    ]),
+    ...session.signups
+      .filter((s) => !s.cancelledAt || s.lateCancellation)
+      .map((s) => [
+        s.kidName,
+        s.memberNumber || "",
+        String(s.kidAge),
+        s.parentName,
+        s.parentPhone,
+        s.parentEmail || "",
+        s.cancelledAt ? "Cancelled (late — still billed)" : s.waitlisted ? "Waitlist" : "Confirmed",
+      ]),
   ];
   const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
 
