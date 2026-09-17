@@ -37,7 +37,14 @@ const REASON_LABELS: Record<string, string> = {
   OTHER: "Cancelled",
 };
 
-type KidRow = { name: string; age: string; memberNumber: string; recurring: boolean; nonMember: boolean };
+type KidRow = {
+  firstName: string;
+  lastName: string;
+  age: string;
+  memberNumber: string;
+  recurring: boolean;
+  nonMember: boolean;
+};
 
 export default function SignupCard({
   session,
@@ -55,7 +62,7 @@ export default function SignupCard({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [kids, setKids] = useState<KidRow[]>([
-    { name: "", age: "", memberNumber: "", recurring: false, nonMember: false },
+    { firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false },
   ]);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
@@ -64,7 +71,7 @@ export default function SignupCard({
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
 
-  function updateKid(i: number, field: "name" | "age" | "memberNumber", value: string) {
+  function updateKid(i: number, field: "firstName" | "lastName" | "age" | "memberNumber", value: string) {
     setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, [field]: value } : k)));
   }
 
@@ -79,7 +86,10 @@ export default function SignupCard({
   }
 
   function addKidRow() {
-    setKids((prev) => [...prev, { name: "", age: "", memberNumber: "", recurring: false, nonMember: false }]);
+    setKids((prev) => [
+      ...prev,
+      { firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false },
+    ]);
   }
 
   function removeKidRow(i: number) {
@@ -93,16 +103,21 @@ export default function SignupCard({
 
     const cleanedKids = kids
       .map((k) => ({
-        name: k.name.trim(),
+        firstName: k.firstName.trim(),
+        lastName: k.lastName.trim(),
         age: parseInt(k.age, 10),
         memberNumber: k.memberNumber.trim(),
         recurring: k.recurring,
         nonMember: k.nonMember,
       }))
-      .filter((k) => k.name.length > 0);
+      .filter((k) => k.firstName.length > 0 || k.lastName.length > 0);
 
     if (cleanedKids.length === 0) {
       setError("Add at least one child.");
+      return;
+    }
+    if (cleanedKids.some((k) => k.firstName.length === 0 || k.lastName.length === 0)) {
+      setError("Enter a first and last name for each child.");
       return;
     }
     if (cleanedKids.some((k) => Number.isNaN(k.age) || k.age < 0 || k.age > 18)) {
@@ -121,7 +136,13 @@ export default function SignupCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: session.id,
-          kids: cleanedKids,
+          kids: cleanedKids.map((k) => ({
+            name: `${k.firstName} ${k.lastName}`.trim(),
+            age: k.age,
+            memberNumber: k.memberNumber,
+            recurring: k.recurring,
+            nonMember: k.nonMember,
+          })),
         }),
       });
       const data = await res.json();
@@ -138,7 +159,7 @@ export default function SignupCard({
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
           : "You're signed up! A confirmation text is on its way.") + recurringNote
       );
-      setKids([{ name: "", age: "", memberNumber: "", recurring: false, nonMember: false }]);
+      setKids([{ firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -241,33 +262,42 @@ export default function SignupCard({
               <div className="space-y-2">
                 {kids.map((kid, i) => (
                   <div key={i} className="space-y-1.5 rounded-lg border border-court-navy/10 bg-white p-2.5">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <input
                         type="text"
-                        placeholder="Child's name"
-                        value={kid.name}
-                        onChange={(e) => updateKid(i, "name", e.target.value)}
-                        className={`flex-1 ${inputClass}`}
+                        placeholder="First name"
+                        value={kid.firstName}
+                        onChange={(e) => updateKid(i, "firstName", e.target.value)}
+                        className={`min-w-[7rem] flex-1 ${inputClass}`}
                       />
                       <input
-                        type="number"
-                        placeholder="Age"
-                        min={0}
-                        max={18}
-                        value={kid.age}
-                        onChange={(e) => updateKid(i, "age", e.target.value)}
-                        className={`w-20 ${inputClass}`}
+                        type="text"
+                        placeholder="Last name"
+                        value={kid.lastName}
+                        onChange={(e) => updateKid(i, "lastName", e.target.value)}
+                        className={`min-w-[7rem] flex-1 ${inputClass}`}
                       />
-                      {kids.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeKidRow(i)}
-                          className="px-2 text-sm text-court-navy/30 transition hover:text-red-600"
-                          aria-label="Remove child"
-                        >
-                          ✕
-                        </button>
-                      )}
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          placeholder="Age"
+                          min={0}
+                          max={18}
+                          value={kid.age}
+                          onChange={(e) => updateKid(i, "age", e.target.value)}
+                          className={`w-20 ${inputClass}`}
+                        />
+                        {kids.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeKidRow(i)}
+                            className="px-2 text-sm text-court-navy/30 transition hover:text-red-600"
+                            aria-label="Remove child"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     </div>
                     {!kid.nonMember && (
                       <input
