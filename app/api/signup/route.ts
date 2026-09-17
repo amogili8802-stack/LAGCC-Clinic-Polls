@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Each child needs a name and a valid age." }, { status: 400 });
     }
     if (!kid.nonMember && !kid.memberNumber?.trim()) {
-      return NextResponse.json({ error: "Each child needs a member number, or check \"Not a club member\"." }, { status: 400 });
+      return NextResponse.json({ error: "Each child needs a member number, or check \"Non-member\"." }, { status: 400 });
     }
   }
 

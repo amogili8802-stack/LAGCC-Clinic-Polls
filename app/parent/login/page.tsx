@@ -23,7 +23,7 @@ export default function ParentLoginPage() {
       setError("Incorrect phone number or password.");
       return;
     }
-    router.push(searchParams.get("next") || "/parent/account");
+    router.push(searchParams.get("next") || "/");
     router.refresh();
   }
 

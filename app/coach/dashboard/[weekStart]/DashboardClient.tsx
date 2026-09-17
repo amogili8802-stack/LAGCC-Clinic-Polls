@@ -511,7 +511,7 @@ function AddWalkInForm({
           onChange={(e) => setIsNonMember(e.target.checked)}
           className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
         />
-        Not a club member
+        Non-member
       </label>
       <label className="col-span-2 flex items-center gap-2 text-xs font-medium text-court-navy/70">
         <input

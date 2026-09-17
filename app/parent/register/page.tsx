@@ -39,7 +39,7 @@ export default function ParentRegisterPage() {
         router.push("/parent/login");
         return;
       }
-      router.push("/parent/account");
+      router.push("/");
       router.refresh();
     } catch {
       setError("Network error. Please try again.");

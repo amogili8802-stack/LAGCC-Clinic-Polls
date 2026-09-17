@@ -110,7 +110,7 @@ export default function SignupCard({
       return;
     }
     if (cleanedKids.some((k) => !k.nonMember && k.memberNumber.length === 0)) {
-      setError('Enter a member number for each child, or check "Not a club member."');
+      setError('Enter a member number for each child, or check "Non-member."');
       return;
     }
 
@@ -285,7 +285,7 @@ export default function SignupCard({
                         onChange={() => toggleNonMember(i)}
                         className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
                       />
-                      Not a club member
+                      Non-member
                     </label>
                     <label className="flex items-center gap-2 px-0.5 py-0.5 text-xs font-medium text-court-navy/70">
                       <input

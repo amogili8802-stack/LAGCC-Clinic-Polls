@@ -48,8 +48,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers>
           <header className="relative border-b border-court-gold/25 bg-court-cream/95 backdrop-blur">
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-court-gold/60 to-transparent" />
-            <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-5">
-              <Link href="/" className="flex items-baseline gap-3">
+            <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+              <Link
+                href="/"
+                className="flex items-center gap-3 rounded-2xl border border-court-navy/10 bg-white/50 px-4 py-2 transition hover:border-court-gold/40 hover:bg-white/80"
+              >
                 <span className="font-script text-4xl leading-none text-court-navy sm:text-5xl">
                   {clubName}
                 </span>
