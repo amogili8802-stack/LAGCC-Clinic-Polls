@@ -28,15 +28,12 @@ export default function HeaderNav({
       <div className="flex items-center gap-3">
         <Link
           href="/parent/account"
-          className="group/acct inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-court-green py-1.5 pl-1.5 pr-3.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-court-greenDark hover:shadow-md"
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-court-green px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-court-greenDark hover:shadow-md"
         >
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold">
             {initial}
           </span>
           Account
-          <span aria-hidden className="transition-transform group-hover/acct:translate-x-0.5">
-            →
-          </span>
         </Link>
         <button onClick={() => signOut({ callbackUrl: "/" })} className={ghostClass}>
           Log out

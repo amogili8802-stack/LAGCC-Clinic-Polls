@@ -49,15 +49,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <header className="relative border-b border-court-gold/25 bg-court-cream/95 backdrop-blur">
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-court-gold/60 to-transparent" />
             <div className="mx-auto flex max-w-4xl items-start justify-between gap-x-4 gap-y-2 px-4 py-4">
-              <Link href="/" className="group/logo flex min-w-0 flex-1 flex-wrap items-center gap-2.5">
-                <span className="font-script text-3xl leading-none text-court-navy transition group-hover/logo:text-court-greenDark sm:text-4xl md:text-5xl">
+              <Link href="/" className="flex min-w-0 flex-1 items-center transition hover:text-court-greenDark">
+                <span className="font-script text-3xl leading-none text-court-navy sm:text-4xl md:text-5xl">
                   {clubName}
-                </span>
-                <span className="hidden shrink-0 items-center rounded-full border border-court-gold/40 bg-court-goldLight/50 px-2.5 py-1 font-display text-[10px] font-semibold uppercase tracking-[0.2em] text-court-green transition group-hover/logo:border-court-gold/70 sm:flex">
-                  Tennis Clinics
                 </span>
               </Link>
               <nav className="flex shrink-0 items-center gap-3 pt-1 text-sm">
+                <Link
+                  href="/"
+                  className="hidden shrink-0 items-center rounded-full border border-court-gold/40 bg-court-goldLight/50 px-2.5 py-1 font-display text-[10px] font-semibold uppercase tracking-[0.2em] text-court-green transition hover:border-court-gold/70 sm:flex"
+                >
+                  Tennis Clinics
+                </Link>
                 <HeaderNav parentName={role === "parent" ? session?.user?.name || "My" : null} isCoach={role === "coach"} />
               </nav>
             </div>
