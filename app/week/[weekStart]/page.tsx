@@ -10,6 +10,7 @@ import {
   todayUTC,
   isWeekOpenForSignup,
   formatOpensAt,
+  isSignupOpenForSession,
 } from "@/lib/weeks";
 import SignupCard from "./SignupCard";
 import LookupPanel from "./LookupPanel";
@@ -103,6 +104,7 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
                 {daySessions.map((session) => (
                   <SignupCard
                     key={session.id}
+                    signupOpen={isSignupOpenForSession(session.date)}
                     session={{
                       ...session,
                       date: session.date.toISOString(),

@@ -44,12 +44,19 @@ below).
   the page and in the sign-up API, so it can't be bypassed by hitting the
   API directly.
 - **Waitlisting** once a clinic hits capacity.
+- **Nightly 8pm sign-up cutoff** — each clinic stops accepting new public
+  sign-ups at 8:00pm (club-local time) the night before it runs, shown as a
+  "Sign-ups closed" badge in place of the Sign Up button. This is separate
+  from and happens regardless of the auto-cancellation check below — a
+  clinic that already has enough kids by 8pm just closes, it isn't
+  cancelled. Enforced on the page and in the sign-up API. Coaches can still
+  add a walk-in after the cutoff from the dashboard.
 - **Auto-cancellation for low sign-ups** — every clinic has a minimum
-  (default 4) and maximum (default 8), both coach-editable per session. A
-  daily job checks every session happening the next day; if it's under its
-  minimum by 8pm, it's cancelled automatically with reason "Not enough
-  sign-ups" and everyone signed up (including the waitlist) gets a text.
-  See **Deploying** for the one-time cron setup this needs.
+  (default 4) and maximum (default 8), both coach-editable per session. The
+  same nightly 8pm check that closes sign-ups also cancels the clinic (with
+  reason "Not enough sign-ups" and a text to everyone signed up, including
+  the waitlist) if it's still under its minimum at that point. See
+  **Deploying** for the one-time cron setup this needs.
 - **Self-serve management** — a "Manage my sign-ups" panel lets a parent look
   up everything they've signed up for by phone number and cancel it
   themselves, without needing a coach.

@@ -36,7 +36,13 @@ const REASON_LABELS: Record<string, string> = {
 
 type KidRow = { name: string; age: string; memberNumber: string };
 
-export default function SignupCard({ session }: { session: SessionForCard }) {
+export default function SignupCard({
+  session,
+  signupOpen,
+}: {
+  session: SessionForCard;
+  signupOpen: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,10 +154,14 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
         {!isCancelled && (
           <span
             className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold text-white ${
-              isFull ? "bg-court-clay" : "bg-court-green"
+              !signupOpen ? "bg-court-navy/40" : isFull ? "bg-court-clay" : "bg-court-green"
             }`}
           >
-            {isFull ? "Full — waitlist open" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
+            {!signupOpen
+              ? "Sign-ups closed"
+              : isFull
+              ? "Full — waitlist open"
+              : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
           </span>
         )}
       </div>
@@ -160,6 +170,11 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
         <div className="mt-3 ml-2 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-800">
           Cancelled — {REASON_LABELS[session.cancellationReason || "OTHER"]}
           {session.cancellationNote ? `: ${session.cancellationNote}` : ""}
+        </div>
+      )}
+      {!isCancelled && !signupOpen && (
+        <div className="mt-3 ml-2 rounded-lg bg-court-navy/[0.04] px-3 py-2 text-sm text-court-navy/60">
+          Sign-ups closed at 8:00 PM the night before this clinic.
         </div>
       )}
 
@@ -178,7 +193,7 @@ export default function SignupCard({ session }: { session: SessionForCard }) {
         </div>
       )}
 
-      {!isCancelled && (
+      {!isCancelled && signupOpen && (
         <div className="ml-2 mt-4">
           {!open ? (
             <button

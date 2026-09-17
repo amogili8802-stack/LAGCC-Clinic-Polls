@@ -3,7 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
-import { formatDateLong, mondayOf, isWeekOpenForSignup, formatOpensAt } from "@/lib/weeks";
+import {
+  formatDateLong,
+  mondayOf,
+  isWeekOpenForSignup,
+  formatOpensAt,
+  isSignupOpenForSession,
+  formatSignupCutoff,
+} from "@/lib/weeks";
 
 const clubName = process.env.CLUB_NAME || "The club";
 
@@ -45,6 +52,12 @@ export async function POST(req: NextRequest) {
   if (!isWeekOpenForSignup(weekStart)) {
     return NextResponse.json(
       { error: `Sign-ups for this week open ${formatOpensAt(weekStart)}.` },
+      { status: 400 }
+    );
+  }
+  if (!isSignupOpenForSession(session.date)) {
+    return NextResponse.json(
+      { error: `Sign-ups for this clinic closed ${formatSignupCutoff(session.date)}.` },
       { status: 400 }
     );
   }

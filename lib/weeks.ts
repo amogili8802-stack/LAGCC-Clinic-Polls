@@ -145,6 +145,39 @@ export function formatOpensAt(weekStart: Date): string {
   });
 }
 
+// New sign-ups for a given clinic session close at 8:00pm club-local time
+// the night before it runs. This is independent of the auto-cancellation
+// cron (which fires around the same time to cancel under-minimum
+// sessions) — a session that already has enough sign-ups by 8pm simply
+// stops accepting more, without being cancelled.
+export function signupCutoffFor(sessionDate: Date): Date {
+  const nightBefore = addDays(sessionDate, -1);
+  return zonedWallTimeToUTC(
+    nightBefore.getUTCFullYear(),
+    nightBefore.getUTCMonth(),
+    nightBefore.getUTCDate(),
+    20,
+    0,
+    CLUB_TIMEZONE
+  );
+}
+
+export function isSignupOpenForSession(sessionDate: Date, now: Date = new Date()): boolean {
+  return now.getTime() < signupCutoffFor(sessionDate).getTime();
+}
+
+export function formatSignupCutoff(sessionDate: Date): string {
+  return signupCutoffFor(sessionDate).toLocaleString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: CLUB_TIMEZONE,
+    timeZoneName: "short",
+  });
+}
+
 // Day-of-week offset from Monday (0) used to place each template within a
 // week that starts on Monday, even though ClinicTemplate.dayOfWeek uses the
 // JS convention (0 = Sunday).
