@@ -39,7 +39,7 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
   return (
     <div>
       <p className="mb-5 text-center font-display text-base italic text-court-green/80 sm:text-lg">
-        Weekly clinics for every age, all season long.
+        Weekly clinics for every age.
       </p>
 
       <div className="mb-6 flex items-center justify-between gap-2">
