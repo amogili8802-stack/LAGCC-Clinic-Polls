@@ -6,6 +6,20 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding clinic schedule...");
+
+  // One-time fixup: the Friday "Clinic" (ages 8-10) became "Junior Clinic"
+  // (ages 6-10). Since the match key below includes ageMin/ageMax, a plain
+  // age-range change looks like a brand new slot rather than an edit to the
+  // existing one — relocate it by its old identity first so the loop finds
+  // and updates it in place instead of leaving it orphaned alongside a new
+  // duplicate row. No-ops once this has run once against a given database.
+  const staleFridayClinic = await prisma.clinicTemplate.findFirst({
+    where: { dayOfWeek: 5, startTime: "15:30", ageMin: 8, ageMax: 10, name: "Clinic" },
+  });
+  if (staleFridayClinic) {
+    await prisma.clinicTemplate.update({ where: { id: staleFridayClinic.id }, data: { ageMin: 6 } });
+  }
+
   for (const c of CLINIC_SCHEDULE) {
     // Matched by day/time/age-range rather than name, so renaming a clinic
     // in CLINIC_SCHEDULE updates the existing row in place instead of

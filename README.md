@@ -15,7 +15,7 @@ by the seed script:
 | Tuesday | Super Stars / Junior Clinic | 3:30–4:30pm | 3–6 / 6–10 |
 | Wednesday | Super Stars / Junior Clinic | 3:30–4:30pm | 3–6 / 6–10 |
 | Thursday | Super Stars / Junior Clinic / Junior Clinic | 3:30–4:30pm | 3–6 / 6–10 / 10–15 |
-| Friday | Clinic / Junior Clinic | 3:30–4:30pm | 8–10 / 10–15 |
+| Friday | Junior Clinic (x2) | 3:30–4:30pm | 6–10 / 10–15 |
 | Saturday | Junior Clinic | 1:00–2:00pm | 6–10 |
 | Sunday | Junior Clinic (x2) | 10:00–11:00am / 11:00am–12:00pm | 6–10 / 10–15 |
 

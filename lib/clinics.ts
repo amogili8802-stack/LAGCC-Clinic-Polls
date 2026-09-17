@@ -34,7 +34,7 @@ export const CLINIC_SCHEDULE: ClinicDefinition[] = [
   { name: "Junior Clinic", dayOfWeek: 4, startTime: "15:30", endTime: "16:30", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 3 },
 
   // Friday
-  { name: "Clinic", dayOfWeek: 5, startTime: "15:30", endTime: "16:30", ageMin: 8, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
+  { name: "Junior Clinic", dayOfWeek: 5, startTime: "15:30", endTime: "16:30", ageMin: 6, ageMax: 10, capacity: 8, minSignups: 4, sortOrder: 1 },
   { name: "Junior Clinic", dayOfWeek: 5, startTime: "15:30", endTime: "16:30", ageMin: 10, ageMax: 15, capacity: 8, minSignups: 4, sortOrder: 2 },
 
   // Saturday
