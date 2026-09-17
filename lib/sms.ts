@@ -4,11 +4,17 @@
 
 let twilioClient: import("twilio").Twilio | null | undefined;
 
+// Trimmed so a stray leading/trailing space pasted into an env var (which
+// still reads as "present") doesn't silently produce an invalid credential.
+function envVar(name: string): string {
+  return (process.env[name] || "").trim();
+}
+
 function getClient() {
   if (twilioClient !== undefined) return twilioClient;
 
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
+  const sid = envVar("TWILIO_ACCOUNT_SID");
+  const token = envVar("TWILIO_AUTH_TOKEN");
 
   if (!sid || !token) {
     twilioClient = null;
@@ -25,10 +31,15 @@ export type SmsResult = { to: string; ok: boolean; error?: string };
 
 export async function sendSms(to: string, body: string): Promise<SmsResult> {
   const client = getClient();
-  const from = process.env.TWILIO_FROM_NUMBER;
+  const from = envVar("TWILIO_FROM_NUMBER");
 
   if (!client || !from) {
-    console.log(`[SMS not configured — would send to ${to}]\n${body}`);
+    const missing = [
+      !envVar("TWILIO_ACCOUNT_SID") && "TWILIO_ACCOUNT_SID",
+      !envVar("TWILIO_AUTH_TOKEN") && "TWILIO_AUTH_TOKEN",
+      !from && "TWILIO_FROM_NUMBER",
+    ].filter(Boolean);
+    console.log(`[SMS not configured — missing ${missing.join(", ")} — would send to ${to}]\n${body}`);
     return { to, ok: true };
   }
 
