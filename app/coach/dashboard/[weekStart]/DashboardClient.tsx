@@ -11,6 +11,7 @@ type Signup = {
   kidName: string;
   kidAge: number;
   memberNumber: string | null;
+  isNonMember: boolean;
   recurringSignupId: string | null;
   parentName: string;
   parentPhone: string;
@@ -377,7 +378,9 @@ function SessionPanel({ session }: { session: Session }) {
                     {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁 weekly</span>}
                     {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
                   </td>
-                  <td className="px-3 py-2 text-court-navy/60">{s.memberNumber || "—"}</td>
+                  <td className="px-3 py-2 text-court-navy/60">
+                    {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : s.memberNumber || "—"}
+                  </td>
                   <td className="px-3 py-2 text-court-navy/60">{s.parentName}</td>
                   <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
                   <td className="px-3 py-2 text-right">
@@ -399,7 +402,9 @@ function SessionPanel({ session }: { session: Session }) {
                     </span>{" "}
                     <span className="text-red-700/50">({s.kidAge})</span>
                   </td>
-                  <td className="px-3 py-2 text-red-700/70">{s.memberNumber || "—"}</td>
+                  <td className="px-3 py-2 text-red-700/70">
+                    {s.isNonMember ? "Non-member" : s.memberNumber || "—"}
+                  </td>
                   <td className="px-3 py-2 text-red-700/70">{s.parentName}</td>
                   <td className="px-3 py-2 text-red-700/70">{s.parentPhone}</td>
                   <td className="px-3 py-2 text-right">
@@ -445,6 +450,7 @@ function AddWalkInForm({
 }) {
   const [kidName, setKidName] = useState("");
   const [memberNumber, setMemberNumber] = useState("");
+  const [isNonMember, setIsNonMember] = useState(false);
   const [kidAge, setKidAge] = useState("");
   const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
@@ -468,7 +474,8 @@ function AddWalkInForm({
         body: JSON.stringify({
           sessionId,
           kidName,
-          memberNumber: memberNumber.trim() || undefined,
+          memberNumber: isNonMember ? undefined : memberNumber.trim() || undefined,
+          isNonMember,
           kidAge: age,
           parentName,
           parentPhone,
@@ -489,10 +496,23 @@ function AddWalkInForm({
   return (
     <form onSubmit={submit} className="mt-2 grid gap-2.5 rounded-xl border border-court-navy/10 bg-court-cream/50 p-4 sm:grid-cols-2">
       <input placeholder="Child name" value={kidName} onChange={(e) => setKidName(e.target.value)} className={inputClass} />
-      <input placeholder="Member # (optional)" value={memberNumber} onChange={(e) => setMemberNumber(e.target.value)} className={inputClass} />
+      {isNonMember ? (
+        <div />
+      ) : (
+        <input placeholder="Member # (optional)" value={memberNumber} onChange={(e) => setMemberNumber(e.target.value)} className={inputClass} />
+      )}
       <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className={inputClass} />
       <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className={inputClass} />
       <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={inputClass} />
+      <label className="col-span-2 flex items-center gap-2 text-xs font-medium text-court-navy/70">
+        <input
+          type="checkbox"
+          checked={isNonMember}
+          onChange={(e) => setIsNonMember(e.target.checked)}
+          className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+        />
+        Not a club member
+      </label>
       <label className="col-span-2 flex items-center gap-2 text-xs font-medium text-court-navy/70">
         <input
           type="checkbox"

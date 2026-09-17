@@ -37,7 +37,7 @@ const REASON_LABELS: Record<string, string> = {
   OTHER: "Cancelled",
 };
 
-type KidRow = { name: string; age: string; memberNumber: string; recurring: boolean };
+type KidRow = { name: string; age: string; memberNumber: string; recurring: boolean; nonMember: boolean };
 
 export default function SignupCard({
   session,
@@ -54,7 +54,9 @@ export default function SignupCard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [kids, setKids] = useState<KidRow[]>([{ name: "", age: "", memberNumber: "", recurring: false }]);
+  const [kids, setKids] = useState<KidRow[]>([
+    { name: "", age: "", memberNumber: "", recurring: false, nonMember: false },
+  ]);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
@@ -70,8 +72,14 @@ export default function SignupCard({
     setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, recurring: !k.recurring } : k)));
   }
 
+  function toggleNonMember(i: number) {
+    setKids((prev) =>
+      prev.map((k, idx) => (idx === i ? { ...k, nonMember: !k.nonMember, memberNumber: "" } : k))
+    );
+  }
+
   function addKidRow() {
-    setKids((prev) => [...prev, { name: "", age: "", memberNumber: "", recurring: false }]);
+    setKids((prev) => [...prev, { name: "", age: "", memberNumber: "", recurring: false, nonMember: false }]);
   }
 
   function removeKidRow(i: number) {
@@ -89,6 +97,7 @@ export default function SignupCard({
         age: parseInt(k.age, 10),
         memberNumber: k.memberNumber.trim(),
         recurring: k.recurring,
+        nonMember: k.nonMember,
       }))
       .filter((k) => k.name.length > 0);
 
@@ -100,8 +109,8 @@ export default function SignupCard({
       setError("Enter a valid age for each child.");
       return;
     }
-    if (cleanedKids.some((k) => k.memberNumber.length === 0)) {
-      setError("Enter a member number for each child.");
+    if (cleanedKids.some((k) => !k.nonMember && k.memberNumber.length === 0)) {
+      setError('Enter a member number for each child, or check "Not a club member."');
       return;
     }
 
@@ -129,7 +138,7 @@ export default function SignupCard({
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
           : "You're signed up! A confirmation text is on its way.") + recurringNote
       );
-      setKids([{ name: "", age: "", memberNumber: "", recurring: false }]);
+      setKids([{ name: "", age: "", memberNumber: "", recurring: false, nonMember: false }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -260,13 +269,24 @@ export default function SignupCard({
                         </button>
                       )}
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Member #"
-                      value={kid.memberNumber}
-                      onChange={(e) => updateKid(i, "memberNumber", e.target.value)}
-                      className={`w-full ${inputClass}`}
-                    />
+                    {!kid.nonMember && (
+                      <input
+                        type="text"
+                        placeholder="Member #"
+                        value={kid.memberNumber}
+                        onChange={(e) => updateKid(i, "memberNumber", e.target.value)}
+                        className={`w-full ${inputClass}`}
+                      />
+                    )}
+                    <label className="flex items-center gap-2 px-0.5 py-0.5 text-xs font-medium text-court-navy/70">
+                      <input
+                        type="checkbox"
+                        checked={kid.nonMember}
+                        onChange={() => toggleNonMember(i)}
+                        className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                      />
+                      Not a club member
+                    </label>
                     <label className="flex items-center gap-2 px-0.5 py-0.5 text-xs font-medium text-court-navy/70">
                       <input
                         type="checkbox"

@@ -28,7 +28,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .filter((s) => !s.cancelledAt || s.lateCancellation)
       .map((s) => [
         s.kidName,
-        s.memberNumber || "",
+        s.isNonMember ? "Non-member" : s.memberNumber || "",
         String(s.kidAge),
         s.parentName,
         s.parentPhone,

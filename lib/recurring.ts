@@ -15,6 +15,7 @@ export async function ensureRecurringSignup(params: {
   kidName: string;
   kidAge: number;
   memberNumber?: string | null;
+  isNonMember?: boolean;
 }): Promise<boolean> {
   const existingActive = await prisma.recurringSignup.findMany({
     where: { templateId: params.templateId, active: true },
@@ -34,7 +35,8 @@ export async function ensureRecurringSignup(params: {
       parentPhone: params.parentPhone.trim(),
       parentEmail: params.parentEmail?.trim() || null,
       kidName: params.kidName.trim(),
-      memberNumber: params.memberNumber?.trim() || null,
+      memberNumber: params.isNonMember ? null : params.memberNumber?.trim() || null,
+      isNonMember: Boolean(params.isNonMember),
       kidAge: params.kidAge,
     },
   });

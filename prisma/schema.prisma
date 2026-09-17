@@ -67,6 +67,7 @@ model Signup {
   kidName           String
   kidAge            Int
   memberNumber      String?
+  isNonMember       Boolean          @default(false)
   waitlisted        Boolean          @default(false)
   addedByCoach      Boolean          @default(false)
   notes             String?
@@ -95,6 +96,7 @@ model RecurringSignup {
   kidName      String
   kidAge       Int
   memberNumber String?
+  isNonMember  Boolean        @default(false)
   active       Boolean        @default(true)
   signups      Signup[]
   createdAt    DateTime       @default(now())

@@ -14,8 +14,18 @@ export async function POST(req: NextRequest) {
   if (!authSession) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const { sessionId, kidName, memberNumber, kidAge, parentName, parentPhone, parentEmail, skipWaitlist, recurring } =
-    body || {};
+  const {
+    sessionId,
+    kidName,
+    memberNumber,
+    isNonMember,
+    kidAge,
+    parentName,
+    parentPhone,
+    parentEmail,
+    skipWaitlist,
+    recurring,
+  } = body || {};
 
   if (!sessionId || !kidName?.trim() || typeof kidAge !== "number" || !parentName?.trim() || !parentPhone?.trim()) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -37,7 +47,8 @@ export async function POST(req: NextRequest) {
       parentPhone: parentPhone.trim(),
       parentEmail: parentEmail?.trim() || null,
       kidName: kidName.trim(),
-      memberNumber: memberNumber?.trim() || null,
+      memberNumber: isNonMember ? null : memberNumber?.trim() || null,
+      isNonMember: Boolean(isNonMember),
       kidAge,
       waitlisted,
       addedByCoach: true,
@@ -60,6 +71,7 @@ export async function POST(req: NextRequest) {
       kidName,
       kidAge,
       memberNumber,
+      isNonMember,
     });
   }
 

@@ -16,7 +16,7 @@ import {
 
 const clubName = process.env.CLUB_NAME || "The club";
 
-type KidInput = { name: string; age: number; memberNumber: string; recurring?: boolean };
+type KidInput = { name: string; age: number; memberNumber: string; recurring?: boolean; nonMember?: boolean };
 
 export async function POST(req: NextRequest) {
   const parent = await getCurrentParent();
@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
     if (!kid.name?.trim() || typeof kid.age !== "number" || Number.isNaN(kid.age) || kid.age < 0 || kid.age > 18) {
       return NextResponse.json({ error: "Each child needs a name and a valid age." }, { status: 400 });
     }
-    if (!kid.memberNumber?.trim()) {
-      return NextResponse.json({ error: "Each child needs a member number." }, { status: 400 });
+    if (!kid.nonMember && !kid.memberNumber?.trim()) {
+      return NextResponse.json({ error: "Each child needs a member number, or check \"Not a club member\"." }, { status: 400 });
     }
   }
 
@@ -73,7 +73,8 @@ export async function POST(req: NextRequest) {
           parentPhone: parent.phone,
           parentEmail: parent.email,
           kidName: kid.name.trim(),
-          memberNumber: kid.memberNumber.trim(),
+          memberNumber: kid.nonMember ? null : kid.memberNumber.trim(),
+          isNonMember: Boolean(kid.nonMember),
           kidAge: kid.age,
           waitlisted: activeCount + i >= session.capacity,
         },
@@ -92,6 +93,7 @@ export async function POST(req: NextRequest) {
       kidName: kid.name,
       kidAge: kid.age,
       memberNumber: kid.memberNumber,
+      isNonMember: kid.nonMember,
     });
   }
 

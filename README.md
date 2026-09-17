@@ -51,7 +51,11 @@ below).
 - **Public sign-up pages** at `/week/YYYY-MM-DD` (one Monday-start week at a
   time, with prev/next navigation), where a logged-in parent can add
   multiple kids to a clinic in one sign-up, each with their own member
-  number.
+  number — or, for a kid who isn't a club member, a "Not a club member"
+  checkbox in place of it. Coaches have the same checkbox on the walk-in
+  form. A non-member shows up as "Non-member" wherever a member number
+  would otherwise appear (the coach roster and the CSV export), so it's
+  clear at a glance who isn't a member.
 - **Weekly recurring sign-ups** — a parent can check "🔁 Sign up
   automatically every week until I cancel" on any child when signing up.
   From then on, every time that week's clinics open, the kid is
