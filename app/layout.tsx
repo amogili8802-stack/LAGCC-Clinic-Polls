@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 href="/"
                 className="flex min-w-0 flex-1 items-center transition hover:text-court-greenDark [container-type:inline-size]"
               >
-                <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-script leading-none text-court-navy text-[clamp(0.75rem,7cqw,3rem)]">
+                <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap pb-1 font-script leading-[1.4] text-court-navy text-[clamp(0.75rem,7cqw,3rem)]">
                   {clubName}
                 </span>
               </Link>
