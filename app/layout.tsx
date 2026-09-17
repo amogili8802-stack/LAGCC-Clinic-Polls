@@ -48,8 +48,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers>
           <header className="relative border-b border-court-gold/25 bg-court-cream/95 backdrop-blur">
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-court-gold/60 to-transparent" />
-            <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-4">
-              <Link href="/" className="group/logo flex flex-wrap items-center gap-2.5">
+            <div className="mx-auto flex max-w-4xl items-start justify-between gap-x-4 gap-y-2 px-4 py-4">
+              <Link href="/" className="group/logo flex min-w-0 flex-1 flex-wrap items-center gap-2.5">
                 <span className="font-script text-3xl leading-none text-court-navy transition group-hover/logo:text-court-greenDark sm:text-4xl md:text-5xl">
                   {clubName}
                 </span>
@@ -57,7 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   Tennis Clinics
                 </span>
               </Link>
-              <nav className="flex items-center gap-3 text-sm">
+              <nav className="flex shrink-0 items-center gap-3 pt-1 text-sm">
                 <HeaderNav parentName={role === "parent" ? session?.user?.name || "My" : null} isCoach={role === "coach"} />
               </nav>
             </div>
