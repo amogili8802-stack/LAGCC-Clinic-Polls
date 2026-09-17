@@ -1,13 +1,13 @@
-import { notFound } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { notFound, redirect } from "next/navigation";
+import { getCoachSession } from "@/lib/coachAuth";
 import { ensureAndGetWeekSessions, addDays, formatDateLong, formatWeekParam, parseWeekParam } from "@/lib/weeks";
 import DashboardClient from "./DashboardClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function CoachWeekDashboard({ params }: { params: Promise<{ weekStart: string }> }) {
-  const authSession = await getServerSession(authOptions);
+  const authSession = await getCoachSession();
+  if (!authSession) redirect("/coach/login");
   const { weekStart: weekStartParam } = await params;
 
   let weekStart: Date;

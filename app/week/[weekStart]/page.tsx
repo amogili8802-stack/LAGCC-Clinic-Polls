@@ -12,8 +12,8 @@ import {
   formatOpensAt,
   isSignupOpenForSession,
 } from "@/lib/weeks";
+import { getCurrentParent } from "@/lib/parentAuth";
 import SignupCard from "./SignupCard";
-import LookupPanel from "./LookupPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +26,7 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
     notFound();
   }
 
+  const parent = await getCurrentParent();
   const isOpen = isWeekOpenForSignup(weekStart);
   const sessions = isOpen ? await ensureAndGetWeekSessions(weekStart) : [];
   const prevWeek = formatWeekParam(addDays(weekStart, -7));
@@ -71,8 +72,6 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
         </Link>
       </div>
 
-      <LookupPanel />
-
       {!isOpen ? (
         <div className="rounded-2xl border border-dashed border-court-gold/40 bg-court-goldLight/40 py-12 text-center">
           <p className="font-display text-lg font-semibold text-court-navy">Not open yet</p>
@@ -105,6 +104,8 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
                   <SignupCard
                     key={session.id}
                     signupOpen={isSignupOpenForSession(session.date)}
+                    isLoggedIn={Boolean(parent)}
+                    weekParam={weekStartParam}
                     session={{
                       ...session,
                       date: session.date.toISOString(),

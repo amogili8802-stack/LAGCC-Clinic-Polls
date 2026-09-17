@@ -1,0 +1,96 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+
+type Record = {
+  id: string;
+  kidName: string;
+  memberNumber: string | null;
+  parentName: string;
+  parentPhone: string;
+  clinicLabel: string;
+  clinicDate: string;
+  cancelledAt: string;
+};
+
+export default function BillingClient({ records: initialRecords }: { records: Record[] }) {
+  const [records, setRecords] = useState(initialRecords);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function dismiss(id: string) {
+    if (!confirm("Clear this cancellation record? Only do this once billing is resolved.")) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/coach/signup/${id}`, { method: "DELETE" });
+      if (res.ok) setRecords((prev) => prev.filter((r) => r.id !== id));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-court-navy/10 bg-white p-5 shadow-card">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-court-gold">Coach Dashboard</p>
+          <h1 className="mt-0.5 font-display text-xl font-semibold tracking-tight text-court-navy">
+            Late Cancellations — Billing
+          </h1>
+          <p className="mt-0.5 text-sm text-court-navy/50">
+            Every sign-up cancelled less than 24 hours before its clinic, across every week, in one place.
+          </p>
+        </div>
+        <Link
+          href="/coach/dashboard"
+          className="rounded-full border border-court-navy/15 px-4 py-1.5 text-sm font-medium text-court-navy/70 transition hover:border-court-navy/30 hover:bg-court-navy/5"
+        >
+          Back to Dashboard
+        </Link>
+      </div>
+
+      {records.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-court-navy/20 bg-white/60 py-10 text-center text-court-navy/50">
+          No outstanding late cancellations.
+        </p>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-court-navy/10 shadow-card">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-court-navy/[0.03] text-xs uppercase tracking-wide text-court-navy/40">
+                <th className="px-4 py-3 font-semibold">Child</th>
+                <th className="px-4 py-3 font-semibold">Member #</th>
+                <th className="px-4 py-3 font-semibold">Clinic</th>
+                <th className="px-4 py-3 font-semibold">Parent</th>
+                <th className="px-4 py-3 font-semibold">Phone</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.map((r) => (
+                <tr key={r.id} className="border-t border-court-navy/10 bg-red-50/40">
+                  <td className="px-4 py-3 font-medium text-red-700">{r.kidName}</td>
+                  <td className="px-4 py-3 text-red-700/70">{r.memberNumber || "—"}</td>
+                  <td className="px-4 py-3 text-red-700/70">
+                    {r.clinicLabel} — {r.clinicDate}
+                  </td>
+                  <td className="px-4 py-3 text-red-700/70">{r.parentName}</td>
+                  <td className="px-4 py-3 text-red-700/70">{r.parentPhone}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => dismiss(r.id)}
+                      disabled={busyId === r.id}
+                      className="font-semibold text-red-700/60 hover:underline disabled:opacity-40"
+                    >
+                      {busyId === r.id ? "Clearing…" : "Dismiss"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

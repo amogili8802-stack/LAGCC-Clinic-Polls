@@ -1,8 +1,8 @@
 # LAGCC Tennis Clinic Sign-Ups
 
-A sign-up site for weekly kids' tennis clinics: parents pick a clinic and add
-one or more kids, coaches log in to manage rosters and cancel clinics (with
-an automatic text message to everyone signed up).
+A sign-up site for weekly kids' tennis clinics: parents create an account,
+pick a clinic and add one or more kids, and coaches log in to manage rosters
+and cancel clinics (with an automatic text message to everyone signed up).
 
 ## The weekly schedule
 
@@ -32,10 +32,26 @@ below).
 
 ## What's built
 
+- **Parent accounts** (`/parent/register`, `/parent/login`) — a parent signs
+  up once with their phone number and a password. Logging in is required to
+  sign a kid up for a clinic (browsing the schedule itself is still public);
+  the sign-up form only asks for the kids' details after that, since the
+  parent's name/phone/email are already known from the account. An older
+  guest sign-up made before accounts existed (matched by phone number)
+  automatically gets linked into a new account the first time that parent
+  registers, so nothing from before this feature is orphaned.
+- **My Account** (`/parent/account`) — a parent's home base: every upcoming
+  clinic they're signed up for with a one-click Cancel, their active weekly
+  (recurring) sign-ups with a Stop button, and a History section showing
+  clinics their kid actually attended. A late cancellation (see below) still
+  shows up in that history, flagged in red next to the kid's name, so a
+  parent can see for themselves what they're being billed for; a cancellation
+  made with 24+ hours' notice simply doesn't appear, since nothing is owed
+  for it.
 - **Public sign-up pages** at `/week/YYYY-MM-DD` (one Monday-start week at a
-  time, with prev/next navigation). Parents fill in their name and phone
-  number once and can add multiple kids in the same sign-up, each with their
-  own member number.
+  time, with prev/next navigation), where a logged-in parent can add
+  multiple kids to a clinic in one sign-up, each with their own member
+  number.
 - **Weekly recurring sign-ups** — a parent can check "🔁 Sign up
   automatically every week until I cancel" on any child when signing up.
   From then on, every time that week's clinics open, the kid is
@@ -44,10 +60,9 @@ below).
   Recurring enrollment runs as part of the same lazy per-week setup as
   everything else (see **Rolling weekly release**), so it happens the
   moment anyone loads that week, not on a separate schedule. Parents manage
-  or stop a recurring sign-up from the same "Manage my sign-ups" panel
-  used for one-off sign-ups; stopping it only affects future weeks, not
-  ones already created. Coaches can also check the same box when adding a
-  walk-in.
+  or stop a recurring sign-up from My Account; stopping it only affects
+  future weeks, not ones already created. Coaches can also check the same
+  box when adding a walk-in.
 - **Rolling weekly release** — a week only opens for public sign-up at
   10:00am (club-local time, `CLUB_TIMEZONE`) on the Thursday of the week
   before it. The current week is always open; anything further out shows a
@@ -69,24 +84,26 @@ below).
   reason "Not enough sign-ups" and a text to everyone signed up, including
   the waitlist) if it's still under its minimum at that point. See
   **Deploying** for the one-time cron setup this needs.
-- **Self-serve management** — a "Manage my sign-ups" panel lets a parent look
-  up everything they've signed up for by phone number and cancel it
-  themselves, without needing a coach.
 - **Late-cancellation tracking (24-hour policy)** — per club policy, cancelling
   a sign-up less than 24 hours before the clinic's start time still incurs a
   charge. A self-serve cancellation made 24+ hours ahead simply removes the
-  sign-up, same as before. One made within 24 hours is kept on record and
+  sign-up, same as before. One made within 24 hours is kept on record: it's
   flagged in red on that clinic's roster on the coach dashboard (e.g. "Peter -
-  cancelled less than 24 hours") so the coach knows to bill for it; a
-  "Dismiss" button on that row clears the record once billing is resolved. It
-  also shows up in the CSV export as "Cancelled (late — still billed)". Early
-  cancellations don't appear on the roster or CSV at all.
+  cancelled less than 24 hours") and in the parent's own account history, and
+  shows up in the CSV export as "Cancelled (late — still billed)". Early
+  cancellations don't appear on any of those. See also **Billing** below.
 - **Coach login** (`/coach/login`, credentials-based, coach accounts live only
-  in the database — there's no public sign-up for coach accounts).
+  in the database — there's no public sign-up for coach accounts). Coach and
+  parent logins are kept fully separate: every coach-only page and API route
+  checks specifically for a coach session, not just any logged-in session, so
+  a parent account can never reach coach actions.
 - **Coach dashboard** (`/coach/dashboard`) per week: view every roster
   (including each kid's member number), add a walk-in/phone sign-up, remove
   a kid, edit a clinic's minimum and maximum, export a roster as CSV, and
   cancel or reopen a clinic.
+- **Billing** (`/coach/billing`) — every late cancellation across every week,
+  in one list, instead of having to click through each week's dashboard to
+  find the red flags. A "Dismiss" button clears a row once it's been billed.
 - **Cancellation reasons**: Rain, Extreme heat, Not enough sign-ups, Other
   (with an optional free-text note) — chosen when a coach cancels a clinic.
 - **Text message notifications** via Twilio:
@@ -107,10 +124,15 @@ below).
 - A coach-facing view of all active recurring sign-ups (today a coach can
   see the "🔁 weekly" tag on a roster and add one via the walk-in form, but
   stopping someone's recurring sign-up on their behalf currently has to go
-  through the parent's own self-serve phone lookup).
+  through the parent's own My Account page).
 - Payment/billing integration if clinics ever need to be paid per session —
-  today the app only flags late cancellations for a coach to bill manually,
-  it doesn't charge anyone itself.
+  today the app only flags late cancellations (on the coach's Billing page
+  and in the parent's own history) for a coach to bill manually, it doesn't
+  charge anyone itself.
+- Self-service password reset for parent accounts (there's no "forgot
+  password" flow yet — a parent locked out today needs a coach to help via
+  the database, or to just re-register... which `/api/parent/register`
+  currently blocks once a phone number is taken).
 
 ## Getting started (local dev)
 

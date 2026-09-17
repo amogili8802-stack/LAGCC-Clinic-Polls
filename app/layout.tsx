@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Beau_Rivage, Fraunces } from "next/font/google";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import "./globals.css";
 import Providers from "./providers";
+import HeaderNav from "./HeaderNav";
 
 const clubName = process.env.CLUB_NAME || "LAGCC";
 const faviconLetter = (clubName.trim().charAt(0) || "T").toUpperCase();
@@ -35,7 +38,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
+  const role = (session?.user as { role?: string } | undefined)?.role;
+
   return (
     <html lang="en" className={`${jakarta.variable} ${script.variable} ${display.variable}`}>
       <body className="flex min-h-screen flex-col font-sans">
@@ -52,12 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </span>
               </Link>
               <nav className="flex items-center gap-4 text-sm">
-                <Link
-                  href="/coach/login"
-                  className="rounded-full border border-court-navy/20 px-4 py-1.5 font-medium text-court-navy/80 transition hover:border-court-navy/40 hover:bg-court-navy/5 hover:text-court-navy"
-                >
-                  Coach Login
-                </Link>
+                <HeaderNav parentName={role === "parent" ? session?.user?.name || "My" : null} isCoach={role === "coach"} />
               </nav>
             </div>
           </header>

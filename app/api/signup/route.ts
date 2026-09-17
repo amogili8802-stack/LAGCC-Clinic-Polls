@@ -4,6 +4,7 @@ import { sendSms } from "@/lib/sms";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
 import { ensureRecurringSignup } from "@/lib/recurring";
+import { getCurrentParent } from "@/lib/parentAuth";
 import {
   formatDateLong,
   mondayOf,
@@ -18,18 +19,15 @@ const clubName = process.env.CLUB_NAME || "The club";
 type KidInput = { name: string; age: number; memberNumber: string; recurring?: boolean };
 
 export async function POST(req: NextRequest) {
+  const parent = await getCurrentParent();
+  if (!parent) return NextResponse.json({ error: "Log in to sign up a child." }, { status: 401 });
+
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
 
-  const { sessionId, parentName, parentPhone, parentEmail, kids } = body as {
-    sessionId?: string;
-    parentName?: string;
-    parentPhone?: string;
-    parentEmail?: string;
-    kids?: KidInput[];
-  };
+  const { sessionId, kids } = body as { sessionId?: string; kids?: KidInput[] };
 
-  if (!sessionId || !parentName?.trim() || !parentPhone?.trim() || !Array.isArray(kids) || kids.length === 0) {
+  if (!sessionId || !Array.isArray(kids) || kids.length === 0) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
   for (const kid of kids) {
@@ -70,9 +68,10 @@ export async function POST(req: NextRequest) {
       prisma.signup.create({
         data: {
           sessionId,
-          parentName: parentName.trim(),
-          parentPhone: parentPhone.trim(),
-          parentEmail: parentEmail?.trim() || null,
+          parentId: parent.id,
+          parentName: parent.name,
+          parentPhone: parent.phone,
+          parentEmail: parent.email,
           kidName: kid.name.trim(),
           memberNumber: kid.memberNumber.trim(),
           kidAge: kid.age,
@@ -86,9 +85,10 @@ export async function POST(req: NextRequest) {
   for (const kid of recurringKids) {
     await ensureRecurringSignup({
       templateId: session.templateId,
-      parentName,
-      parentPhone,
-      parentEmail,
+      parentId: parent.id,
+      parentName: parent.name,
+      parentPhone: parent.phone,
+      parentEmail: parent.email,
       kidName: kid.name,
       kidAge: kid.age,
       memberNumber: kid.memberNumber,
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
   }
   smsBody += "Reply to the pro shop with any questions.";
 
-  await sendSms(toE164(parentPhone), smsBody);
+  await sendSms(toE164(parent.phone), smsBody);
 
   return NextResponse.json({
     success: true,

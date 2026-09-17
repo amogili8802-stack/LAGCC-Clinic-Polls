@@ -8,6 +8,7 @@ import { samePhone } from "@/lib/phone";
 // coach's walk-in route.
 export async function ensureRecurringSignup(params: {
   templateId: string;
+  parentId?: string | null;
   parentName: string;
   parentPhone: string;
   parentEmail?: string | null;
@@ -28,6 +29,7 @@ export async function ensureRecurringSignup(params: {
   await prisma.recurringSignup.create({
     data: {
       templateId: params.templateId,
+      parentId: params.parentId || null,
       parentName: params.parentName.trim(),
       parentPhone: params.parentPhone.trim(),
       parentEmail: params.parentEmail?.trim() || null,

@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { samePhone } from "@/lib/phone";
+import { getCurrentParent } from "@/lib/parentAuth";
 
 export async function POST(req: NextRequest) {
+  const parent = await getCurrentParent();
+  if (!parent) return NextResponse.json({ error: "Log in to manage your sign-ups." }, { status: 401 });
+
   const body = await req.json().catch(() => null);
   const recurringId = body?.recurringId as string | undefined;
-  const parentPhone = body?.parentPhone as string | undefined;
-
-  if (!recurringId || !parentPhone) {
-    return NextResponse.json({ error: "Missing recurring sign-up id or phone number." }, { status: 400 });
-  }
+  if (!recurringId) return NextResponse.json({ error: "Missing recurring sign-up id." }, { status: 400 });
 
   const recurring = await prisma.recurringSignup.findUnique({ where: { id: recurringId } });
   if (!recurring) return NextResponse.json({ error: "Recurring sign-up not found." }, { status: 404 });
-  if (!samePhone(recurring.parentPhone, parentPhone)) {
-    return NextResponse.json({ error: "That phone number doesn't match this sign-up." }, { status: 403 });
+  const owned = recurring.parentId === parent.id || samePhone(recurring.parentPhone, parent.phone);
+  if (!owned) {
+    return NextResponse.json({ error: "That sign-up doesn't belong to your account." }, { status: 403 });
   }
 
   await prisma.recurringSignup.update({

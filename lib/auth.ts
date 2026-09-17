@@ -2,6 +2,7 @@ import { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { normalizePhone } from "@/lib/phone";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -10,6 +11,7 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     CredentialsProvider({
+      id: "coach",
       name: "Coach Login",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -26,20 +28,44 @@ export const authOptions: NextAuthOptions = {
         const valid = await bcrypt.compare(credentials.password, coach.passwordHash);
         if (!valid) return null;
 
-        return { id: coach.id, name: coach.name, email: coach.email };
+        return { id: coach.id, name: coach.name, email: coach.email, role: "coach" };
+      },
+    }),
+    CredentialsProvider({
+      id: "parent",
+      name: "Parent Login",
+      credentials: {
+        phone: { label: "Phone", type: "tel" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.phone || !credentials?.password) return null;
+
+        const phone = normalizePhone(credentials.phone);
+        if (!phone) return null;
+
+        const parent = await prisma.parent.findUnique({ where: { phone } });
+        if (!parent) return null;
+
+        const valid = await bcrypt.compare(credentials.password, parent.passwordHash);
+        if (!valid) return null;
+
+        return { id: parent.id, name: parent.name, email: parent.email, role: "parent" };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.coachId = user.id;
+        token.userId = user.id;
+        token.role = (user as { role?: string }).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { id?: string }).id = token.coachId as string;
+        (session.user as { id?: string; role?: string }).id = token.userId as string;
+        (session.user as { id?: string; role?: string }).role = token.role as string;
       }
       return session;
     },

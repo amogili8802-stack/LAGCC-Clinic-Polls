@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function CoachLoginPage() {
+export default function ParentLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -15,17 +17,13 @@ export default function CoachLoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const res = await signIn("coach", {
-      email,
-      password,
-      redirect: false,
-    });
+    const res = await signIn("parent", { phone, password, redirect: false });
     setLoading(false);
     if (res?.error) {
-      setError("Invalid email or password.");
+      setError("Incorrect phone number or password.");
       return;
     }
-    router.push("/coach/dashboard");
+    router.push(searchParams.get("next") || "/parent/account");
     router.refresh();
   }
 
@@ -35,17 +33,17 @@ export default function CoachLoginPage() {
   return (
     <div className="mx-auto mt-4 max-w-sm">
       <div className="mb-6 text-center">
-        <span className="font-script text-4xl leading-none text-court-navy">Coach Login</span>
+        <span className="font-script text-4xl leading-none text-court-navy">Log In</span>
         <p className="mt-2 font-display text-sm italic text-court-navy/50">
-          Manage rosters and clinic cancellations
+          Sign up your kids and manage your clinics
         </p>
       </div>
       <form onSubmit={submit} className="space-y-3 rounded-2xl border border-court-navy/10 bg-white p-6 shadow-card">
         <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="tel"
+          placeholder="Phone number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           className={inputClass}
           required
         />
@@ -61,10 +59,16 @@ export default function CoachLoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-full bg-court-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-court-navyLight disabled:opacity-60"
+          className="w-full rounded-full bg-court-green px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-court-greenDark disabled:opacity-60"
         >
-          {loading ? "Signing in…" : "Sign In"}
+          {loading ? "Signing in…" : "Log In"}
         </button>
+        <p className="text-center text-sm text-court-navy/50">
+          New here?{" "}
+          <Link href="/parent/register" className="font-semibold text-court-green hover:underline">
+            Create an account
+          </Link>
+        </p>
       </form>
     </div>
   );

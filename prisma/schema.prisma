@@ -59,6 +59,8 @@ model Signup {
   session           ClinicSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   recurringSignupId String?
   recurringSignup   RecurringSignup? @relation(fields: [recurringSignupId], references: [id])
+  parentId          String?
+  parent            Parent?          @relation(fields: [parentId], references: [id])
   parentName        String
   parentPhone       String
   parentEmail       String?
@@ -75,6 +77,7 @@ model Signup {
   @@index([sessionId])
   @@index([parentPhone])
   @@index([recurringSignupId])
+  @@index([parentId])
 }
 
 // A standing weekly sign-up: once created, every week's sync (in
@@ -84,6 +87,8 @@ model RecurringSignup {
   id           String         @id @default(cuid())
   templateId   String
   template     ClinicTemplate @relation(fields: [templateId], references: [id])
+  parentId     String?
+  parent       Parent?        @relation(fields: [parentId], references: [id])
   parentName   String
   parentPhone  String
   parentEmail  String?
@@ -97,6 +102,21 @@ model RecurringSignup {
 
   @@index([templateId])
   @@index([parentPhone])
+  @@index([parentId])
+}
+
+// A parent's account — phone + password login, used to sign kids up and
+// manage/cancel/view history from a "my account" page instead of the old
+// type-your-phone-number self-serve lookup.
+model Parent {
+  id               String            @id @default(cuid())
+  phone            String            @unique // normalized digits-only, see lib/phone.ts
+  passwordHash     String
+  name             String
+  email            String?
+  createdAt        DateTime          @default(now())
+  signups          Signup[]
+  recurringSignups RecurringSignup[]
 }
 
 model Coach {

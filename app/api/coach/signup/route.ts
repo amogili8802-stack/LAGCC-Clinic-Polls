@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCoachSession } from "@/lib/coachAuth";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
 import { toE164 } from "@/lib/phone";
@@ -11,7 +10,7 @@ import { ensureRecurringSignup } from "@/lib/recurring";
 const clubName = process.env.CLUB_NAME || "The club";
 
 export async function POST(req: NextRequest) {
-  const authSession = await getServerSession(authOptions);
+  const authSession = await getCoachSession();
   if (!authSession) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
