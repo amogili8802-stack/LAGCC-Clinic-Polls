@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
+import { ensureRecurringSignup } from "@/lib/recurring";
 import {
   formatDateLong,
   mondayOf,
@@ -14,7 +15,7 @@ import {
 
 const clubName = process.env.CLUB_NAME || "The club";
 
-type KidInput = { name: string; age: number; memberNumber: string };
+type KidInput = { name: string; age: number; memberNumber: string; recurring?: boolean };
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -81,6 +82,19 @@ export async function POST(req: NextRequest) {
     )
   );
 
+  const recurringKids = kids.filter((k) => k.recurring);
+  for (const kid of recurringKids) {
+    await ensureRecurringSignup({
+      templateId: session.templateId,
+      parentName,
+      parentPhone,
+      parentEmail,
+      kidName: kid.name,
+      kidAge: kid.age,
+      memberNumber: kid.memberNumber,
+    });
+  }
+
   const waitlistedCount = created.filter((s) => s.waitlisted).length;
   const confirmedNames = created.filter((s) => !s.waitlisted).map((s) => s.kidName);
   const waitlistedNames = created.filter((s) => s.waitlisted).map((s) => s.kidName);
@@ -94,9 +108,17 @@ export async function POST(req: NextRequest) {
   if (waitlistedNames.length > 0) {
     smsBody += `${waitlistedNames.join(", ")} added to the WAITLIST for ${session.template.name} on ${dateLabel} (clinic is full). `;
   }
+  if (recurringKids.length > 0) {
+    smsBody += `${recurringKids.map((k) => k.name.trim()).join(", ")} will be auto-enrolled every week until you cancel. `;
+  }
   smsBody += "Reply to the pro shop with any questions.";
 
   await sendSms(toE164(parentPhone), smsBody);
 
-  return NextResponse.json({ success: true, waitlistedCount, confirmedCount: confirmedNames.length });
+  return NextResponse.json({
+    success: true,
+    waitlistedCount,
+    confirmedCount: confirmedNames.length,
+    recurringCount: recurringKids.length,
+  });
 }

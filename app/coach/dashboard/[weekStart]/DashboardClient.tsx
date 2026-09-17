@@ -4,13 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { formatTime } from "@/lib/clinics";
-import { formatDateLong } from "@/lib/weeks";
+import { formatDateLong } from "@/lib/date";
 
 type Signup = {
   id: string;
   kidName: string;
   kidAge: number;
   memberNumber: string | null;
+  recurringSignupId: string | null;
   parentName: string;
   parentPhone: string;
   parentEmail: string | null;
@@ -351,6 +352,7 @@ function SessionPanel({ session }: { session: Session }) {
                     <span className="font-medium text-court-navy/80">{s.kidName}</span>{" "}
                     <span className="text-court-navy/40">({s.kidAge})</span>
                     {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
+                    {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁 weekly</span>}
                     {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
                   </td>
                   <td className="px-3 py-2 text-court-navy/60">{s.memberNumber || "—"}</td>
@@ -402,6 +404,7 @@ function AddWalkInForm({
   const [kidAge, setKidAge] = useState("");
   const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
+  const [recurring, setRecurring] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -425,6 +428,7 @@ function AddWalkInForm({
           kidAge: age,
           parentName,
           parentPhone,
+          recurring,
         }),
       });
       if (res.ok) {
@@ -445,6 +449,15 @@ function AddWalkInForm({
       <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className={inputClass} />
       <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className={inputClass} />
       <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={inputClass} />
+      <label className="col-span-2 flex items-center gap-2 text-xs font-medium text-court-navy/70">
+        <input
+          type="checkbox"
+          checked={recurring}
+          onChange={(e) => setRecurring(e.target.checked)}
+          className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+        />
+        🔁 Sign up automatically every week until cancelled
+      </label>
       {error && <p className="col-span-2 text-sm font-medium text-red-600">{error}</p>}
       <div className="col-span-2 flex gap-2 pt-1">
         <button

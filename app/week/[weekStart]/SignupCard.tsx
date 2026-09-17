@@ -8,6 +8,7 @@ type Signup = {
   kidName: string;
   kidAge: number;
   waitlisted: boolean;
+  recurringSignupId?: string | null;
 };
 
 type SessionForCard = {
@@ -34,7 +35,7 @@ const REASON_LABELS: Record<string, string> = {
   OTHER: "Cancelled",
 };
 
-type KidRow = { name: string; age: string; memberNumber: string };
+type KidRow = { name: string; age: string; memberNumber: string; recurring: boolean };
 
 export default function SignupCard({
   session,
@@ -50,7 +51,7 @@ export default function SignupCard({
   const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [parentEmail, setParentEmail] = useState("");
-  const [kids, setKids] = useState<KidRow[]>([{ name: "", age: "", memberNumber: "" }]);
+  const [kids, setKids] = useState<KidRow[]>([{ name: "", age: "", memberNumber: "", recurring: false }]);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted);
   const waitlisted = session.signups.filter((s) => s.waitlisted);
@@ -58,12 +59,16 @@ export default function SignupCard({
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
 
-  function updateKid(i: number, field: keyof KidRow, value: string) {
+  function updateKid(i: number, field: "name" | "age" | "memberNumber", value: string) {
     setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, [field]: value } : k)));
   }
 
+  function toggleRecurring(i: number) {
+    setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, recurring: !k.recurring } : k)));
+  }
+
   function addKidRow() {
-    setKids((prev) => [...prev, { name: "", age: "", memberNumber: "" }]);
+    setKids((prev) => [...prev, { name: "", age: "", memberNumber: "", recurring: false }]);
   }
 
   function removeKidRow(i: number) {
@@ -76,7 +81,12 @@ export default function SignupCard({
     setSuccess(null);
 
     const cleanedKids = kids
-      .map((k) => ({ name: k.name.trim(), age: parseInt(k.age, 10), memberNumber: k.memberNumber.trim() }))
+      .map((k) => ({
+        name: k.name.trim(),
+        age: parseInt(k.age, 10),
+        memberNumber: k.memberNumber.trim(),
+        recurring: k.recurring,
+      }))
       .filter((k) => k.name.length > 0);
 
     if (cleanedKids.length === 0) {
@@ -114,15 +124,19 @@ export default function SignupCard({
         setError(data.error || "Something went wrong. Please try again.");
         return;
       }
+      const recurringNote =
+        data.recurringCount > 0
+          ? ` ${data.recurringCount === 1 ? "That child is" : `${data.recurringCount} of those children are`} now signed up automatically every week.`
+          : "";
       setSuccess(
-        data.waitlistedCount > 0
+        (data.waitlistedCount > 0
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
-          : "You're signed up! A confirmation text is on its way."
+          : "You're signed up! A confirmation text is on its way.") + recurringNote
       );
       setParentName("");
       setParentPhone("");
       setParentEmail("");
-      setKids([{ name: "", age: "", memberNumber: "" }]);
+      setKids([{ name: "", age: "", memberNumber: "", recurring: false }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -182,6 +196,7 @@ export default function SignupCard({
         <ul className="mt-3 ml-2 flex flex-wrap gap-1.5 text-sm text-court-navy/80">
           {activeSignups.map((s) => (
             <li key={s.id} className="rounded-full bg-court-navy/[0.05] px-3 py-1 font-medium">
+              {s.recurringSignupId && <span title="Signed up automatically every week">🔁 </span>}
               {s.kidName} <span className="text-court-navy/40">({s.kidAge})</span>
             </li>
           ))}
@@ -271,6 +286,15 @@ export default function SignupCard({
                       onChange={(e) => updateKid(i, "memberNumber", e.target.value)}
                       className={`w-full ${inputClass}`}
                     />
+                    <label className="flex items-center gap-2 px-0.5 py-0.5 text-xs font-medium text-court-navy/70">
+                      <input
+                        type="checkbox"
+                        checked={kid.recurring}
+                        onChange={() => toggleRecurring(i)}
+                        className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                      />
+                      🔁 Sign up automatically every week until I cancel
+                    </label>
                   </div>
                 ))}
                 <button

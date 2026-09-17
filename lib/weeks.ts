@@ -1,188 +1,84 @@
 import { prisma } from "@/lib/prisma";
-import { CLINIC_SCHEDULE } from "@/lib/clinics";
+import { CLINIC_SCHEDULE, formatTime } from "@/lib/clinics";
+import { sendSms } from "@/lib/sms";
+import { toE164, samePhone } from "@/lib/phone";
+import { addDays, formatDateLong, offsetFromMonday } from "@/lib/date";
 
-// All date math here treats dates as plain calendar days at UTC midnight.
-// The actual wall-clock time of the clinic (e.g. "3:30 PM") is stored/shown
-// separately as a string on the template, so timezone drift on the Date
-// object itself never matters.
+// Pure date/timezone helpers live in lib/date.ts (client-safe — no prisma,
+// no sms). Re-exported here so existing server-side `from "@/lib/weeks"`
+// imports keep working unchanged; anything below actually touches the
+// database or sends texts, which is why it can't live in lib/date.ts.
+export * from "@/lib/date";
 
-export function toDateOnlyUTC(y: number, m: number, d: number): Date {
-  return new Date(Date.UTC(y, m, d));
-}
+const clubName = process.env.CLUB_NAME || "The club";
 
-export function todayUTC(): Date {
-  const now = new Date();
-  return toDateOnlyUTC(now.getFullYear(), now.getMonth(), now.getDate());
-}
+// Auto-enrolls every active RecurringSignup into this week's session for
+// its clinic, if it isn't already enrolled. Runs as part of
+// ensureAndGetWeekSessions so it happens the moment anyone (a parent or a
+// coach) first loads a week after it's been created — no separate cron
+// needed, matching how session rows themselves get lazily created.
+async function syncRecurringSignupsForWeek(
+  weekStart: Date,
+  templates: { id: string; dayOfWeek: number }[]
+) {
+  const activeRecurring = await prisma.recurringSignup.findMany({ where: { active: true } });
+  if (activeRecurring.length === 0) return;
 
-// Monday of the week containing `date`.
-export function mondayOf(date: Date): Date {
-  const day = date.getUTCDay(); // 0 = Sunday ... 6 = Saturday
-  const offsetFromMonday = (day + 6) % 7; // Mon->0, Tue->1, ..., Sun->6
-  const monday = new Date(date);
-  monday.setUTCDate(date.getUTCDate() - offsetFromMonday);
-  return monday;
-}
+  const byTemplate = new Map<string, typeof activeRecurring>();
+  for (const r of activeRecurring) {
+    if (!byTemplate.has(r.templateId)) byTemplate.set(r.templateId, []);
+    byTemplate.get(r.templateId)!.push(r);
+  }
 
-export function addDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d;
-}
+  for (const template of templates) {
+    const recurringForTemplate = byTemplate.get(template.id);
+    if (!recurringForTemplate || recurringForTemplate.length === 0) continue;
 
-export function formatWeekParam(date: Date): string {
-  return date.toISOString().slice(0, 10); // YYYY-MM-DD
-}
+    const date = addDays(weekStart, offsetFromMonday(template.dayOfWeek));
+    const session = await prisma.clinicSession.findUnique({
+      where: { templateId_date: { templateId: template.id, date } },
+      include: { template: true, signups: true },
+    });
+    if (!session || session.status === "CANCELLED") continue;
 
-export function parseWeekParam(param: string): Date {
-  const [y, m, d] = param.split("-").map((v) => parseInt(v, 10));
-  if (!y || !m || !d) throw new Error("Invalid week param");
-  return mondayOf(toDateOnlyUTC(y, m - 1, d));
-}
+    let activeCount = session.signups.filter((s) => !s.waitlisted).length;
 
-export function formatDateLong(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
+    for (const r of recurringForTemplate) {
+      // Skip if this recurring subscription already created a signup here,
+      // or if the same kid/parent already has one from signing up directly
+      // for this specific week (e.g. the same week they checked the
+      // recurring box) — either way, they already have their spot.
+      const alreadyHasSpot = session.signups.some(
+        (s) =>
+          s.recurringSignupId === r.id ||
+          (samePhone(s.parentPhone, r.parentPhone) && s.kidName.trim().toLowerCase() === r.kidName.trim().toLowerCase())
+      );
+      if (alreadyHasSpot) continue;
 
-export function formatDateShort(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
+      const waitlisted = activeCount >= session.capacity;
+      await prisma.signup.create({
+        data: {
+          sessionId: session.id,
+          recurringSignupId: r.id,
+          parentName: r.parentName,
+          parentPhone: r.parentPhone,
+          parentEmail: r.parentEmail,
+          kidName: r.kidName,
+          memberNumber: r.memberNumber,
+          kidAge: r.kidAge,
+          waitlisted,
+        },
+      });
+      if (!waitlisted) activeCount++;
 
-// The club's local timezone, used only for the "next week opens Thursday
-// 10am" release gate below — everything else in this file is deliberately
-// timezone-agnostic date-only math.
-export const CLUB_TIMEZONE = process.env.CLUB_TIMEZONE || "America/Los_Angeles";
-
-// Converts a Y/M/D + hour/minute wall-clock time *in timeZone* to the
-// corresponding UTC instant, correctly accounting for that zone's DST
-// offset on that specific date. Two passes is enough to converge except
-// in the one-hour DST-transition window itself, which is an acceptable
-// edge case for a "opens around 10am" release gate.
-function zonedWallTimeToUTC(
-  y: number,
-  m: number,
-  d: number,
-  hour: number,
-  minute: number,
-  timeZone: string
-): Date {
-  const dtf = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hourCycle: "h23",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-  // How far "instant" is behind the timeZone's wall-clock reading of it,
-  // in ms, when both are expressed as UTC-millis.
-  const offsetAt = (instantMs: number) => {
-    const parts = dtf.formatToParts(new Date(instantMs)).reduce<Record<string, string>>((acc, p) => {
-      acc[p.type] = p.value;
-      return acc;
-    }, {});
-    const asIfUTC = Date.UTC(
-      parseInt(parts.year, 10),
-      parseInt(parts.month, 10) - 1,
-      parseInt(parts.day, 10),
-      parseInt(parts.hour, 10),
-      parseInt(parts.minute, 10),
-      parseInt(parts.second, 10)
-    );
-    return asIfUTC - instantMs;
-  };
-
-  const naive = Date.UTC(y, m, d, hour, minute, 0);
-  const offset = offsetAt(naive);
-  let utc = naive - offset;
-  // Re-check once in case the offset changed between `naive` and `utc`
-  // (i.e. the desired wall-clock time falls right at a DST transition).
-  const offset2 = offsetAt(utc);
-  if (offset2 !== offset) utc = naive - offset2;
-  return new Date(utc);
-}
-
-// A week (identified by its Monday) opens for public sign-ups at 10:00am
-// club-local time on the Thursday of the *previous* week — i.e. 4 days
-// before that Monday.
-export function weekOpensAt(weekStart: Date): Date {
-  const thursdayBefore = addDays(weekStart, -4);
-  return zonedWallTimeToUTC(
-    thursdayBefore.getUTCFullYear(),
-    thursdayBefore.getUTCMonth(),
-    thursdayBefore.getUTCDate(),
-    10,
-    0,
-    CLUB_TIMEZONE
-  );
-}
-
-export function isWeekOpenForSignup(weekStart: Date, now: Date = new Date()): boolean {
-  return now.getTime() >= weekOpensAt(weekStart).getTime();
-}
-
-export function formatOpensAt(weekStart: Date): string {
-  return weekOpensAt(weekStart).toLocaleString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: CLUB_TIMEZONE,
-    timeZoneName: "short",
-  });
-}
-
-// New sign-ups for a given clinic session close at 8:00pm club-local time
-// the night before it runs. This is independent of the auto-cancellation
-// cron (which fires around the same time to cancel under-minimum
-// sessions) — a session that already has enough sign-ups by 8pm simply
-// stops accepting more, without being cancelled.
-export function signupCutoffFor(sessionDate: Date): Date {
-  const nightBefore = addDays(sessionDate, -1);
-  return zonedWallTimeToUTC(
-    nightBefore.getUTCFullYear(),
-    nightBefore.getUTCMonth(),
-    nightBefore.getUTCDate(),
-    20,
-    0,
-    CLUB_TIMEZONE
-  );
-}
-
-export function isSignupOpenForSession(sessionDate: Date, now: Date = new Date()): boolean {
-  return now.getTime() < signupCutoffFor(sessionDate).getTime();
-}
-
-export function formatSignupCutoff(sessionDate: Date): string {
-  return signupCutoffFor(sessionDate).toLocaleString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: CLUB_TIMEZONE,
-    timeZoneName: "short",
-  });
-}
-
-// Day-of-week offset from Monday (0) used to place each template within a
-// week that starts on Monday, even though ClinicTemplate.dayOfWeek uses the
-// JS convention (0 = Sunday).
-function offsetFromMonday(dayOfWeek: number): number {
-  return (dayOfWeek + 6) % 7;
+      const dateLabel = formatDateLong(session.date);
+      const timeLabel = `${formatTime(session.template.startTime)}-${formatTime(session.template.endTime)}`;
+      const smsBody = waitlisted
+        ? `${clubName} Tennis: ${r.kidName} added to the WAITLIST for ${session.template.name} on ${dateLabel} (${timeLabel}) — your weekly sign-up, clinic is full.`
+        : `${clubName} Tennis: ${r.kidName} auto-enrolled for ${session.template.name} on ${dateLabel} (${timeLabel}) — your weekly sign-up. Manage or cancel it anytime on the site.`;
+      await sendSms(toE164(r.parentPhone), smsBody);
+    }
+  }
 }
 
 // Ensures a ClinicSession row exists for every active template for the
@@ -214,6 +110,8 @@ export async function ensureAndGetWeekSessions(weekStart: Date) {
       },
     });
   }
+
+  await syncRecurringSignupsForWeek(weekStart, effectiveTemplates);
 
   const sessions = await prisma.clinicSession.findMany({
     where: {

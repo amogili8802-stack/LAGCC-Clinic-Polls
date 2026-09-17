@@ -6,6 +6,7 @@ import { sendSms } from "@/lib/sms";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
 import { formatDateLong } from "@/lib/weeks";
+import { ensureRecurringSignup } from "@/lib/recurring";
 
 const clubName = process.env.CLUB_NAME || "The club";
 
@@ -14,7 +15,8 @@ export async function POST(req: NextRequest) {
   if (!authSession) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const { sessionId, kidName, memberNumber, kidAge, parentName, parentPhone, parentEmail, skipWaitlist } = body || {};
+  const { sessionId, kidName, memberNumber, kidAge, parentName, parentPhone, parentEmail, skipWaitlist, recurring } =
+    body || {};
 
   if (!sessionId || !kidName?.trim() || typeof kidAge !== "number" || !parentName?.trim() || !parentPhone?.trim()) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -49,6 +51,18 @@ export async function POST(req: NextRequest) {
     ? `${clubName} Tennis: ${kidName} added to the WAITLIST for ${session.template.name} on ${dateLabel} (${timeLabel}).`
     : `${clubName} Tennis: ${kidName} confirmed for ${session.template.name} on ${dateLabel} (${timeLabel}).`;
   await sendSms(toE164(parentPhone), smsBody);
+
+  if (recurring) {
+    await ensureRecurringSignup({
+      templateId: session.templateId,
+      parentName,
+      parentPhone,
+      parentEmail,
+      kidName,
+      kidAge,
+      memberNumber,
+    });
+  }
 
   return NextResponse.json({ success: true, signup });
 }

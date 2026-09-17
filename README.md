@@ -36,6 +36,18 @@ below).
   time, with prev/next navigation). Parents fill in their name and phone
   number once and can add multiple kids in the same sign-up, each with their
   own member number.
+- **Weekly recurring sign-ups** — a parent can check "🔁 Sign up
+  automatically every week until I cancel" on any child when signing up.
+  From then on, every time that week's clinics open, the kid is
+  auto-enrolled in the matching clinic with no action needed — a
+  confirmation (or waitlist) text goes out the same as a normal sign-up.
+  Recurring enrollment runs as part of the same lazy per-week setup as
+  everything else (see **Rolling weekly release**), so it happens the
+  moment anyone loads that week, not on a separate schedule. Parents manage
+  or stop a recurring sign-up from the same "Manage my sign-ups" panel
+  used for one-off sign-ups; stopping it only affects future weeks, not
+  ones already created. Coaches can also check the same box when adding a
+  walk-in.
 - **Rolling weekly release** — a week only opens for public sign-up at
   10:00am (club-local time, `CLUB_TIMEZONE`) on the Thursday of the week
   before it. The current week is always open; anything further out shows a
@@ -83,8 +95,10 @@ below).
 - Multiple named coach roles/permissions (currently any coach account can do
   anything).
 - A real weather API hook to suggest "Rain" cancellations automatically.
-- Recurring/season-long sign-up ("sign my kid up for every Tuesday this
-  season") instead of one week at a time.
+- A coach-facing view of all active recurring sign-ups (today a coach can
+  see the "🔁 weekly" tag on a roster and add one via the walk-in form, but
+  stopping someone's recurring sign-up on their behalf currently has to go
+  through the parent's own self-serve phone lookup).
 - Payment/billing integration if clinics ever need to be paid per session.
 
 ## Getting started (local dev)
