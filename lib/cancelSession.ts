@@ -65,3 +65,28 @@ export async function cancelSessionAndNotify({
     textsSent: results.filter((r) => r.ok).length,
   };
 }
+
+// Texts everyone actually attending (not waitlisted, not cancelled) that
+// their clinic is confirmed to run. Called by the auto-cancel cron once it
+// decides a session has enough sign-ups to stay on, so parents get a
+// definitive answer either way instead of only hearing about cancellations.
+export async function notifyClinicIsOn(sessionId: string) {
+  const session = await prisma.clinicSession.findUnique({
+    where: { id: sessionId },
+    include: { template: true, signups: true },
+  });
+  if (!session) return { ok: false as const, error: "Session not found." };
+
+  const attending = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
+  const dateLabel = formatDateLong(session.date);
+  const timeLabel = `${formatTime(session.template.startTime)}-${formatTime(session.template.endTime)}`;
+  const smsBody = `${clubName} Tennis: ${session.template.name} on ${dateLabel} (${timeLabel}) is ON as scheduled — see you tomorrow!`;
+
+  const phones = attending.map((s) => toE164(s.parentPhone));
+  const results = await sendBulkSms(phones, smsBody);
+
+  return {
+    ok: true as const,
+    textsSent: results.filter((r) => r.ok).length,
+  };
+}

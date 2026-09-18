@@ -86,8 +86,12 @@ below).
   (default 4) and maximum (default 8), both coach-editable per session. The
   same nightly 8pm check that closes sign-ups also cancels the clinic (with
   reason "Not enough sign-ups" and a text to everyone signed up, including
-  the waitlist) if it's still under its minimum at that point. See
-  **Deploying** for the one-time cron setup this needs.
+  the waitlist) if it's still under its minimum at that point — late
+  cancellations still count toward the minimum, since they're still billed.
+  If the clinic instead has enough sign-ups to stay on, everyone actually
+  attending (not the waitlist, not anyone who's cancelled) gets a text
+  confirming the clinic is on. See **Deploying** for the one-time cron setup
+  this needs.
 - **Late-cancellation tracking (24-hour policy)** — per club policy, cancelling
   a sign-up less than 24 hours before the clinic's start time still incurs a
   charge. A self-serve cancellation made 24+ hours ahead simply removes the

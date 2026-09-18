@@ -146,7 +146,10 @@ function SessionPanel({ session }: { session: Session }) {
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
   const lateCancelled = session.signups.filter((s) => s.cancelledAt && s.lateCancellation);
   const isCancelled = session.status === "CANCELLED";
-  const belowMinimum = !isCancelled && activeSignups.length < session.minSignups;
+  // Matches the auto-cancel cron's own count: late cancellations are still
+  // billed, so they still count toward the minimum even though they won't
+  // show up on the roster above.
+  const belowMinimum = !isCancelled && activeSignups.length + lateCancelled.length < session.minSignups;
 
   async function refresh() {
     window.location.reload();
@@ -358,7 +361,8 @@ function SessionPanel({ session }: { session: Session }) {
       </div>
       {!isCancelled && (
         <p className="ml-2 mt-1 text-xs text-court-navy/35">
-          Auto-cancels at 8pm the day before if under {session.minSignups} sign-ups.
+          Auto-cancels at 8pm the day before if under {session.minSignups} sign-ups (late cancellations still
+          count) — otherwise everyone gets a text confirming the clinic is on.
         </p>
       )}
 
