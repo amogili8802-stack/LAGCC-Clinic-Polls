@@ -125,6 +125,7 @@ model Coach {
   id           String   @id @default(cuid())
   name         String
   email        String   @unique
+  phone        String? // normalized digits-only, see lib/phone.ts — texted when a clinic is cancelled
   passwordHash String
   createdAt    DateTime @default(now())
 }

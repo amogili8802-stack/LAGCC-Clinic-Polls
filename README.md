@@ -108,6 +108,10 @@ below).
   access; the last remaining coach account can't be removed, so the club can
   never get locked out entirely. See **Getting started** below for how the
   very first coach account gets created.
+  - Each coach can also have a phone number on file (optional, editable
+    inline any time). A coach with a phone number gets a text alongside the
+    parents the moment a clinic is cancelled; a coach with no phone number
+    just doesn't get one.
 - **Coach dashboard** (`/coach/dashboard`) per week: view every roster
   (including each kid's member number), add a walk-in/phone sign-up, remove
   a kid, edit a clinic's minimum and maximum, export a roster as CSV, and
@@ -120,7 +124,8 @@ below).
 - **Text message notifications** via Twilio:
   - Confirmation text when a parent signs up (or is added by a coach).
   - Cancellation text to every parent signed up (including the waitlist)
-    the moment a coach cancels a clinic, naming the reason.
+    and every coach with a phone number on file, the moment a coach cancels
+    a clinic, naming the reason.
   - If Twilio isn't configured, messages are logged to the server console
     instead of failing, so everything else still works in development.
 

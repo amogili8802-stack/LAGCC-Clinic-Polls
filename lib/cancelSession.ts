@@ -52,7 +52,11 @@ export async function cancelSessionAndNotify({
   let smsBody = `${clubName} Tennis: ${session.template.name} on ${dateLabel} (${timeLabel}) is CANCELLED due to ${CANCELLATION_REASON_LABELS[reason] || "unforeseen circumstances"}.`;
   if (note) smsBody += ` ${note}`;
 
-  const phones = session.signups.map((s) => toE164(s.parentPhone));
+  const coaches = await prisma.coach.findMany({ where: { phone: { not: null } } });
+  const phones = [
+    ...session.signups.map((s) => toE164(s.parentPhone)),
+    ...coaches.map((c) => toE164(c.phone!)),
+  ];
   const results = await sendBulkSms(phones, smsBody);
 
   return {

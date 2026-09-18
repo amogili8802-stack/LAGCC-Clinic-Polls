@@ -11,7 +11,7 @@ export default async function CoachesPage() {
 
   const coaches = await prisma.coach.findMany({
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, email: true, createdAt: true },
+    select: { id: true, name: true, email: true, phone: true, createdAt: true },
   });
 
   return (
