@@ -9,6 +9,7 @@ type Upcoming = {
   kidAge: number;
   waitlisted: boolean;
   cancelled: boolean;
+  lateCancellation: boolean;
   sessionLabel: string;
   sessionDate: string;
   recurring: boolean;
@@ -19,14 +20,6 @@ type Recurring = {
   kidName: string;
   kidAge: number;
   clinicLabel: string;
-};
-
-type PendingLateCancellation = {
-  id: string;
-  kidName: string;
-  kidAge: number;
-  sessionLabel: string;
-  sessionDate: string;
 };
 
 type HistoryEntry = {
@@ -43,14 +36,12 @@ export default function AccountClient({
   parentPhone,
   upcoming,
   recurring,
-  lateCancellations,
   history,
 }: {
   parentName: string;
   parentPhone: string;
   upcoming: Upcoming[];
   recurring: Recurring[];
-  lateCancellations: PendingLateCancellation[];
   history: HistoryEntry[];
 }) {
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -113,50 +104,41 @@ export default function AccountClient({
           </p>
         ) : (
           <ul className="space-y-2">
-            {upcoming.map((s) => (
-              <li
-                key={s.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-court-navy/10 bg-white px-4 py-3 shadow-card"
-              >
-                <span className="text-sm">
-                  {s.recurring && <span title="From a weekly sign-up">🔁 </span>}
-                  <strong className="text-court-navy">{s.kidName}</strong>{" "}
-                  <span className="text-court-navy/40">(Age: {s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
-                  {s.waitlisted && <em className="ml-1 font-medium text-court-gold">(waitlist)</em>}
-                  {s.cancelled && <em className="ml-1 font-medium text-red-700">(clinic cancelled)</em>}
-                </span>
-                <button
-                  onClick={() => cancelSignup(s.id)}
-                  disabled={busyId === s.id}
-                  className="shrink-0 text-sm font-semibold text-red-600 hover:underline disabled:opacity-40"
+            {upcoming.map((s) =>
+              s.lateCancellation ? (
+                <li
+                  key={s.id}
+                  className="rounded-xl border border-red-100 bg-red-50/60 px-4 py-3 text-sm text-red-800"
                 >
-                  {busyId === s.id ? "Cancelling…" : "Cancel"}
-                </button>
-              </li>
-            ))}
+                  <span className="font-medium text-red-700">{s.kidName} — cancelled less than 24 hours</span>{" "}
+                  <span className="text-red-700/50">(Age: {s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
+                  <p className="mt-0.5 text-xs text-red-700/70">Still billed per club policy.</p>
+                </li>
+              ) : (
+                <li
+                  key={s.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-court-navy/10 bg-white px-4 py-3 shadow-card"
+                >
+                  <span className="text-sm">
+                    {s.recurring && <span title="From a weekly sign-up">🔁 </span>}
+                    <strong className="text-court-navy">{s.kidName}</strong>{" "}
+                    <span className="text-court-navy/40">(Age: {s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
+                    {s.waitlisted && <em className="ml-1 font-medium text-court-gold">(waitlist)</em>}
+                    {s.cancelled && <em className="ml-1 font-medium text-red-700">(clinic cancelled)</em>}
+                  </span>
+                  <button
+                    onClick={() => cancelSignup(s.id)}
+                    disabled={busyId === s.id}
+                    className="shrink-0 text-sm font-semibold text-red-600 hover:underline disabled:opacity-40"
+                  >
+                    {busyId === s.id ? "Cancelling…" : "Cancel"}
+                  </button>
+                </li>
+              )
+            )}
           </ul>
         )}
       </section>
-
-      {lateCancellations.length > 0 && (
-        <section className="mb-6">
-          <h2 className="mb-3 font-display text-base font-semibold text-court-navy/70">Late cancellations</h2>
-          <ul className="space-y-2">
-            {lateCancellations.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-xl border border-red-100 bg-red-50/60 px-4 py-3 text-sm text-red-800"
-              >
-                <span className="font-medium text-red-700">{s.kidName}</span>{" "}
-                <span className="text-red-700/50">(Age: {s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
-                <p className="mt-0.5 text-xs text-red-700/70">
-                  Cancelled less than 24 hours before the clinic — still billed per club policy.
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {recurring.length > 0 && (
         <section className="mb-6">

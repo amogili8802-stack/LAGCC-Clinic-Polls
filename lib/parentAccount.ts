@@ -6,9 +6,17 @@ import { formatTime } from "@/lib/clinics";
 // account page (server-rendered) and /api/parent/me (client refresh after
 // cancelling something).
 export async function getParentAccountView(parentId: string) {
-  const [upcomingSignups, recurring, pastSignups, pendingLateCancellations] = await Promise.all([
+  const [upcomingSignups, recurring, pastSignups] = await Promise.all([
+    // "Upcoming" includes both still-active sign-ups and late cancellations
+    // for a clinic that hasn't happened yet (still billed, so still worth
+    // seeing) — an early cancellation (24+ hours' notice) is excluded
+    // entirely, same as before, since nothing is owed for it.
     prisma.signup.findMany({
-      where: { parentId, cancelledAt: null, session: { date: { gte: todayUTC() } } },
+      where: {
+        parentId,
+        session: { date: { gte: todayUTC() } },
+        OR: [{ cancelledAt: null }, { lateCancellation: true }],
+      },
       include: { session: { include: { template: true } } },
       orderBy: { session: { date: "asc" } },
     }),
@@ -20,13 +28,6 @@ export async function getParentAccountView(parentId: string) {
       where: { parentId, session: { date: { lt: todayUTC() } } },
       include: { session: { include: { template: true } } },
       orderBy: { session: { date: "desc" } },
-    }),
-    // A late cancellation for a clinic that hasn't happened yet — once the
-    // clinic date passes it moves into `history` below instead.
-    prisma.signup.findMany({
-      where: { parentId, cancelledAt: { not: null }, lateCancellation: true, session: { date: { gte: todayUTC() } } },
-      include: { session: { include: { template: true } } },
-      orderBy: { session: { date: "asc" } },
     }),
   ]);
 
@@ -52,6 +53,7 @@ export async function getParentAccountView(parentId: string) {
       kidAge: s.kidAge,
       waitlisted: s.waitlisted,
       cancelled: s.session.status === "CANCELLED",
+      lateCancellation: Boolean(s.cancelledAt && s.lateCancellation),
       sessionLabel: `${s.session.template.name} (${formatTime(s.session.template.startTime)})`,
       sessionDate: formatDateShort(s.session.date),
       recurring: Boolean(s.recurringSignupId),
@@ -61,13 +63,6 @@ export async function getParentAccountView(parentId: string) {
       kidName: r.kidName,
       kidAge: r.kidAge,
       clinicLabel: `${r.template.name} (${formatTime(r.template.startTime)})`,
-    })),
-    lateCancellations: pendingLateCancellations.map((s) => ({
-      id: s.id,
-      kidName: s.kidName,
-      kidAge: s.kidAge,
-      sessionLabel: `${s.session.template.name} (${formatTime(s.session.template.startTime)})`,
-      sessionDate: formatDateShort(s.session.date),
     })),
     history,
   };

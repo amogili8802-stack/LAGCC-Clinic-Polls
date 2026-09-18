@@ -17,7 +17,6 @@ export default async function ParentAccountPage() {
       parentPhone={parent.phone}
       upcoming={view.upcoming}
       recurring={view.recurring}
-      lateCancellations={view.lateCancellations}
       history={view.history}
     />
   );
