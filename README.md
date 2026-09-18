@@ -101,6 +101,13 @@ below).
   parent logins are kept fully separate: every coach-only page and API route
   checks specifically for a coach session, not just any logged-in session, so
   a parent account can never reach coach actions.
+- **Coaches** (`/coach/coaches`) — an already-logged-in coach adds every other
+  coach by name/email and sets their password directly in this UI (there's no
+  self-service coach sign-up, and passwords are never emailed/texted or typed
+  into anything besides this page). Also lets a coach remove another coach's
+  access; the last remaining coach account can't be removed, so the club can
+  never get locked out entirely. See **Getting started** below for how the
+  very first coach account gets created.
 - **Coach dashboard** (`/coach/dashboard`) per week: view every roster
   (including each kid's member number), add a walk-in/phone sign-up, remove
   a kid, edit a clinic's minimum and maximum, export a roster as CSV, and
@@ -154,7 +161,10 @@ npm run dev                # http://localhost:3000
 ```
 
 Sign in as a coach at `/coach/login` using `SEED_COACH_EMAIL` /
-`SEED_COACH_PASSWORD` from your `.env`. Add more coach accounts anytime with:
+`SEED_COACH_PASSWORD` from your `.env` — this first account is the only one
+created outside the app itself. Add every other coach from `/coach/coaches`
+once you're logged in (name, email, and a password you set there directly);
+there's no public coach sign-up. Locally, you can alternatively run:
 
 ```bash
 npm run coach:add -- "Assistant Pro" assistant@lagcc.example "a-strong-password"

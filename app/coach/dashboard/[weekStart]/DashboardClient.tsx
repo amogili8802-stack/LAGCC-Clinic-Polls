@@ -75,12 +75,18 @@ export default function DashboardClient({
           </h1>
           <p className="mt-0.5 text-sm text-court-navy/50">Signed in as {coachName}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/coach/billing"
             className="rounded-full border border-court-navy/15 px-4 py-1.5 text-sm font-medium text-court-navy/70 transition hover:border-court-navy/30 hover:bg-court-navy/5"
           >
             Billing
+          </Link>
+          <Link
+            href="/coach/coaches"
+            className="rounded-full border border-court-navy/15 px-4 py-1.5 text-sm font-medium text-court-navy/70 transition hover:border-court-navy/30 hover:bg-court-navy/5"
+          >
+            Coaches
           </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
