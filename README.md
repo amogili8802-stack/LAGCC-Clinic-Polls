@@ -41,13 +41,16 @@ below).
   automatically gets linked into a new account the first time that parent
   registers, so nothing from before this feature is orphaned.
 - **My Account** (`/parent/account`) — a parent's home base: every upcoming
-  clinic they're signed up for with a one-click Cancel, their active weekly
-  (recurring) sign-ups with a Stop button, and a History section showing
-  clinics their kid actually attended. A late cancellation (see below) still
-  shows up in that history, flagged in red next to the kid's name, so a
-  parent can see for themselves what they're being billed for; a cancellation
-  made with 24+ hours' notice simply doesn't appear, since nothing is owed
-  for it.
+  clinic they're signed up for with a one-click Cancel, a Late cancellations
+  section for any clinic they cancelled within 24 hours that hasn't happened
+  yet (so they can see what they're on the hook for before it's even over),
+  their active weekly (recurring) sign-ups with a Stop button, and a History
+  section showing clinics their kid actually attended. Once a late
+  cancellation's clinic date passes, it moves out of Late cancellations and
+  into History instead, flagged in red next to the kid's name so a parent
+  can still see what they were billed for; a cancellation made with 24+
+  hours' notice simply doesn't appear anywhere, since nothing is owed for
+  it.
 - **Public sign-up pages** at `/week/YYYY-MM-DD` (one Monday-start week at a
   time, with prev/next navigation), where a logged-in parent can add
   multiple kids to a clinic in one sign-up, each with their own member

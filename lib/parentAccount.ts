@@ -6,7 +6,7 @@ import { formatTime } from "@/lib/clinics";
 // account page (server-rendered) and /api/parent/me (client refresh after
 // cancelling something).
 export async function getParentAccountView(parentId: string) {
-  const [upcomingSignups, recurring, pastSignups] = await Promise.all([
+  const [upcomingSignups, recurring, pastSignups, pendingLateCancellations] = await Promise.all([
     prisma.signup.findMany({
       where: { parentId, cancelledAt: null, session: { date: { gte: todayUTC() } } },
       include: { session: { include: { template: true } } },
@@ -20,6 +20,13 @@ export async function getParentAccountView(parentId: string) {
       where: { parentId, session: { date: { lt: todayUTC() } } },
       include: { session: { include: { template: true } } },
       orderBy: { session: { date: "desc" } },
+    }),
+    // A late cancellation for a clinic that hasn't happened yet — once the
+    // clinic date passes it moves into `history` below instead.
+    prisma.signup.findMany({
+      where: { parentId, cancelledAt: { not: null }, lateCancellation: true, session: { date: { gte: todayUTC() } } },
+      include: { session: { include: { template: true } } },
+      orderBy: { session: { date: "asc" } },
     }),
   ]);
 
@@ -54,6 +61,13 @@ export async function getParentAccountView(parentId: string) {
       kidName: r.kidName,
       kidAge: r.kidAge,
       clinicLabel: `${r.template.name} (${formatTime(r.template.startTime)})`,
+    })),
+    lateCancellations: pendingLateCancellations.map((s) => ({
+      id: s.id,
+      kidName: s.kidName,
+      kidAge: s.kidAge,
+      sessionLabel: `${s.session.template.name} (${formatTime(s.session.template.startTime)})`,
+      sessionDate: formatDateShort(s.session.date),
     })),
     history,
   };

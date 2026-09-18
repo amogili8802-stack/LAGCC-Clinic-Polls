@@ -21,6 +21,14 @@ type Recurring = {
   clinicLabel: string;
 };
 
+type PendingLateCancellation = {
+  id: string;
+  kidName: string;
+  kidAge: number;
+  sessionLabel: string;
+  sessionDate: string;
+};
+
 type HistoryEntry = {
   id: string;
   kidName: string;
@@ -35,12 +43,14 @@ export default function AccountClient({
   parentPhone,
   upcoming,
   recurring,
+  lateCancellations,
   history,
 }: {
   parentName: string;
   parentPhone: string;
   upcoming: Upcoming[];
   recurring: Recurring[];
+  lateCancellations: PendingLateCancellation[];
   history: HistoryEntry[];
 }) {
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -127,6 +137,26 @@ export default function AccountClient({
           </ul>
         )}
       </section>
+
+      {lateCancellations.length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-3 font-display text-base font-semibold text-court-navy/70">Late cancellations</h2>
+          <ul className="space-y-2">
+            {lateCancellations.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-xl border border-red-100 bg-red-50/60 px-4 py-3 text-sm text-red-800"
+              >
+                <span className="font-medium text-red-700">{s.kidName}</span>{" "}
+                <span className="text-red-700/50">(Age: {s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
+                <p className="mt-0.5 text-xs text-red-700/70">
+                  Cancelled less than 24 hours before the clinic — still billed per club policy.
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {recurring.length > 0 && (
         <section className="mb-6">
