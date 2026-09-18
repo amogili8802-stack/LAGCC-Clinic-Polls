@@ -111,7 +111,7 @@ export default function AccountClient({
                 <span className="text-sm">
                   {s.recurring && <span title="From a weekly sign-up">🔁 </span>}
                   <strong className="text-court-navy">{s.kidName}</strong>{" "}
-                  <span className="text-court-navy/40">({s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
+                  <span className="text-court-navy/40">(Age: {s.kidAge})</span> — {s.sessionLabel} on {s.sessionDate}
                   {s.waitlisted && <em className="ml-1 font-medium text-court-gold">(waitlist)</em>}
                   {s.cancelled && <em className="ml-1 font-medium text-red-700">(clinic cancelled)</em>}
                 </span>
@@ -139,7 +139,7 @@ export default function AccountClient({
               >
                 <span className="text-sm">
                   <strong className="text-court-navy">{r.kidName}</strong>{" "}
-                  <span className="text-court-navy/40">({r.kidAge})</span> — every {r.clinicLabel}
+                  <span className="text-court-navy/40">(Age: {r.kidAge})</span> — every {r.clinicLabel}
                 </span>
                 <button
                   onClick={() => stopRecurring(r.id)}
@@ -171,7 +171,7 @@ export default function AccountClient({
                 ) : (
                   <strong className="text-court-navy">{h.kidName}</strong>
                 )}{" "}
-                <span className="text-court-navy/40">({h.kidAge})</span> — {h.sessionLabel} on {h.sessionDate}
+                <span className="text-court-navy/40">(Age: {h.kidAge})</span> — {h.sessionLabel} on {h.sessionDate}
               </li>
             ))}
           </ul>

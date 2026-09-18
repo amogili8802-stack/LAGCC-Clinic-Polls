@@ -228,14 +228,14 @@ export default function SignupCard({
           {activeSignups.map((s) => (
             <li key={s.id} className="rounded-full bg-court-navy/[0.05] px-3 py-1 font-medium">
               {s.recurringSignupId && <span title="Signed up automatically every week">🔁 </span>}
-              {s.kidName} <span className="text-court-navy/40">({s.kidAge})</span>
+              {s.kidName} <span className="text-court-navy/40">(Age: {s.kidAge})</span>
             </li>
           ))}
         </ul>
       )}
       {waitlisted.length > 0 && (
         <div className="mt-2 ml-2 text-xs font-medium text-court-clay">
-          Waitlist: {waitlisted.map((s) => `${s.kidName} (${s.kidAge})`).join(", ")}
+          Waitlist: {waitlisted.map((s) => `${s.kidName} (Age: ${s.kidAge})`).join(", ")}
         </div>
       )}
 

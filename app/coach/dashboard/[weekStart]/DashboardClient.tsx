@@ -381,7 +381,7 @@ function SessionPanel({ session }: { session: Session }) {
                   <tr key={s.id} className="border-t border-court-navy/10">
                     <td className="px-3 py-2">
                       <span className="font-medium text-court-navy/80">{s.kidName}</span>{" "}
-                      <span className="text-court-navy/40">({s.kidAge})</span>
+                      <span className="text-court-navy/40">(Age: {s.kidAge})</span>
                       {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
                       {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁 weekly</span>}
                       {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
@@ -408,7 +408,7 @@ function SessionPanel({ session }: { session: Session }) {
                       <span className="font-medium text-red-700">
                         {s.kidName} - cancelled less than 24 hours
                       </span>{" "}
-                      <span className="text-red-700/50">({s.kidAge})</span>
+                      <span className="text-red-700/50">(Age: {s.kidAge})</span>
                     </td>
                     <td className="px-3 py-2 text-red-700/70">
                       {s.isNonMember ? "Non-member" : s.memberNumber || "—"}
@@ -436,7 +436,7 @@ function SessionPanel({ session }: { session: Session }) {
               <div key={s.id} className="rounded-xl border border-court-navy/10 p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-court-navy/80">
-                    {s.kidName} <span className="font-normal text-court-navy/40">({s.kidAge})</span>
+                    {s.kidName} <span className="font-normal text-court-navy/40">(Age: {s.kidAge})</span>
                     {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
                     {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁</span>}
                   </p>
@@ -461,7 +461,7 @@ function SessionPanel({ session }: { session: Session }) {
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-red-700">
                     {s.kidName} - cancelled less than 24 hours{" "}
-                    <span className="font-normal text-red-700/50">({s.kidAge})</span>
+                    <span className="font-normal text-red-700/50">(Age: {s.kidAge})</span>
                   </p>
                   <button
                     onClick={() => dismissCancellation(s.id)}
