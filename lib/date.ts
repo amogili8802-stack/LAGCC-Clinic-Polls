@@ -13,11 +13,6 @@ export function toDateOnlyUTC(y: number, m: number, d: number): Date {
   return new Date(Date.UTC(y, m, d));
 }
 
-export function todayUTC(): Date {
-  const now = new Date();
-  return toDateOnlyUTC(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
 // Monday of the week containing `date`.
 export function mondayOf(date: Date): Date {
   const day = date.getUTCDay(); // 0 = Sunday ... 6 = Saturday
@@ -65,6 +60,22 @@ export function formatDateShort(date: Date): string {
 // 10am" release gate below — everything else in this file is deliberately
 // timezone-agnostic date-only math.
 export const CLUB_TIMEZONE = process.env.CLUB_TIMEZONE || "America/Los_Angeles";
+
+// "Today" as the club experiences it, not as the server's own clock
+// (UTC on Vercel) happens to read it — e.g. 9pm PDT is still "today" for
+// the club even though it's already past midnight UTC. Used anywhere
+// "today"/"tomorrow" needs to line up with session dates, which are
+// themselves club-local calendar days.
+export function todayUTC(now: Date = new Date()): Date {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: CLUB_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const get = (type: string) => parseInt(parts.find((p) => p.type === type)!.value, 10);
+  return toDateOnlyUTC(get("year"), get("month") - 1, get("day"));
+}
 
 // Converts a Y/M/D + hour/minute wall-clock time *in timeZone* to the
 // corresponding UTC instant, correctly accounting for that zone's DST
