@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { formatTime } from "@/lib/clinics";
 
 type Signup = {
@@ -54,21 +53,14 @@ type KidRow = {
   nonMember: boolean;
 };
 
-export default function SignupCard({
-  session,
-  signupOpen,
-  isLoggedIn,
-  weekParam,
-}: {
-  session: SessionForCard;
-  signupOpen: boolean;
-  isLoggedIn: boolean;
-  weekParam: string;
-}) {
+export default function SignupCard({ session, signupOpen }: { session: SessionForCard; signupOpen: boolean }) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [parentName, setParentName] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [parentEmail, setParentEmail] = useState("");
   const [kids, setKids] = useState<KidRow[]>([
     { firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false },
   ]);
@@ -120,6 +112,10 @@ export default function SignupCard({
       }))
       .filter((k) => k.firstName.length > 0 || k.lastName.length > 0);
 
+    if (!parentName.trim() || !parentPhone.trim()) {
+      setError("Parent name and phone number are required.");
+      return;
+    }
     if (cleanedKids.length === 0) {
       setError("Add at least one child.");
       return;
@@ -144,6 +140,9 @@ export default function SignupCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: session.id,
+          parentName: parentName.trim(),
+          parentPhone: parentPhone.trim(),
+          parentEmail: parentEmail.trim() || undefined,
           kids: cleanedKids.map((k) => ({
             name: `${k.firstName} ${k.lastName}`.trim(),
             age: k.age,
@@ -167,6 +166,9 @@ export default function SignupCard({
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
           : "You're signed up! A confirmation text is on its way.") + recurringNote
       );
+      setParentName("");
+      setParentPhone("");
+      setParentEmail("");
       setKids([{ firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
@@ -185,9 +187,7 @@ export default function SignupCard({
         isCancelled ? "border-red-100 bg-red-50/60" : "border-court-navy/10 bg-white"
       }`}
     >
-      <div
-        className={`absolute inset-y-0 left-0 w-1.5 ${isCancelled ? "bg-red-300" : "bg-court-green"}`}
-      />
+      <div className={`absolute inset-y-0 left-0 w-1.5 ${isCancelled ? "bg-red-300" : "bg-court-green"}`} />
       <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
         <div>
           <h3 className="font-display text-lg font-semibold text-court-navy">{session.template.name}</h3>
@@ -239,21 +239,7 @@ export default function SignupCard({
         </div>
       )}
 
-      {!isCancelled && signupOpen && !isLoggedIn && (
-        <div className="ml-2 mt-4">
-          <Link
-            href={`/parent/login?next=/week/${weekParam}`}
-            className="group/btn inline-flex items-center gap-1.5 rounded-full bg-court-green px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-court-greenDark hover:shadow-md"
-          >
-            Log In to {isFull ? "Join Waitlist" : "Sign Up"}
-            <span aria-hidden className="transition-transform group-hover/btn:translate-x-0.5">
-              →
-            </span>
-          </Link>
-        </div>
-      )}
-
-      {!isCancelled && signupOpen && isLoggedIn && (
+      {!isCancelled && signupOpen && (
         <div className="ml-2 mt-4">
           {!open ? (
             <button
@@ -267,7 +253,33 @@ export default function SignupCard({
             </button>
           ) : (
             <form onSubmit={submit} className="mt-2 space-y-3 rounded-xl border border-court-navy/10 bg-court-cream/50 p-4">
-              <div className="space-y-2">
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                <input
+                  type="text"
+                  placeholder="Parent/guardian name"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  className={`w-full ${inputClass}`}
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="Cell phone (for text updates)"
+                  value={parentPhone}
+                  onChange={(e) => setParentPhone(e.target.value)}
+                  className={`w-full ${inputClass}`}
+                  required
+                />
+              </div>
+              <input
+                type="email"
+                placeholder="Email (optional)"
+                value={parentEmail}
+                onChange={(e) => setParentEmail(e.target.value)}
+                className={`w-full ${inputClass}`}
+              />
+
+              <div className="space-y-2 border-t border-court-navy/10 pt-3">
                 {kids.map((kid, i) => (
                   <div key={i} className="space-y-1.5 rounded-lg border border-court-navy/10 bg-white p-2.5">
                     <div className="flex flex-wrap gap-2">

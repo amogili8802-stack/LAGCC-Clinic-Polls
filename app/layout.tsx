@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 >
                   Tennis Clinics
                 </Link>
-                <HeaderNav parentName={role === "parent" ? session?.user?.name || "My" : null} isCoach={role === "coach"} />
+                <HeaderNav isCoach={role === "coach"} />
               </nav>
             </div>
           </header>

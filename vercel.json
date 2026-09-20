@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/auto-cancel-low-signups",
-      "schedule": "15 20 * * *"
+      "schedule": "0 4 * * *"
     }
   ]
 }

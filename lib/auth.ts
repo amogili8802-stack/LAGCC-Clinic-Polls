@@ -2,7 +2,6 @@ import { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { normalizePhone } from "@/lib/phone";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -29,28 +28,6 @@ export const authOptions: NextAuthOptions = {
         if (!valid) return null;
 
         return { id: coach.id, name: coach.name, email: coach.email, role: "coach" };
-      },
-    }),
-    CredentialsProvider({
-      id: "parent",
-      name: "Parent Login",
-      credentials: {
-        phone: { label: "Phone", type: "tel" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.phone || !credentials?.password) return null;
-
-        const phone = normalizePhone(credentials.phone);
-        if (!phone) return null;
-
-        const parent = await prisma.parent.findUnique({ where: { phone } });
-        if (!parent) return null;
-
-        const valid = await bcrypt.compare(credentials.password, parent.passwordHash);
-        if (!valid) return null;
-
-        return { id: parent.id, name: parent.name, email: parent.email, role: "parent" };
       },
     }),
   ],
