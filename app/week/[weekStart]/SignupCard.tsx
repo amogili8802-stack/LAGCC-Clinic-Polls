@@ -189,12 +189,11 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border p-5 shadow-card transition hover:shadow-cardHover ${
+      className={`group rounded-2xl border p-5 shadow-card transition hover:shadow-cardHover ${
         isCancelled ? "border-red-100 bg-red-50/60" : "border-court-navy/10 bg-white"
       }`}
     >
-      <div className={`absolute inset-y-0 left-0 w-1.5 ${isCancelled ? "bg-red-300" : "bg-court-green"}`} />
-      <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-display text-lg font-semibold text-court-navy">{session.template.name}</h3>
           <p className="mt-0.5 text-sm text-court-navy/50">
@@ -218,19 +217,19 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       </div>
 
       {isCancelled && (
-        <div className="mt-3 ml-2 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-800">
+        <div className="mt-3 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-800">
           Cancelled — {REASON_LABELS[session.cancellationReason || "OTHER"]}
           {session.cancellationNote ? `: ${parentFacingNote(session.cancellationNote)}` : ""}
         </div>
       )}
       {!isCancelled && !signupOpen && (
-        <div className="mt-3 ml-2 rounded-lg bg-court-navy/[0.04] px-3 py-2 text-sm text-court-navy/60">
+        <div className="mt-3 rounded-lg bg-court-navy/[0.04] px-3 py-2 text-sm text-court-navy/60">
           Sign-ups closed at 8:00 PM the night before this clinic.
         </div>
       )}
 
       {cancelable.length > 0 && (
-        <div className="mt-3 ml-2">
+        <div className="mt-3">
           <button
             type="button"
             onClick={() => setShowRoster((v) => !v)}
@@ -246,7 +245,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
           {showRoster && (
             <>
               {activeSignups.length > 0 && (
-                <ul className="mt-1.5 flex flex-wrap gap-1.5 text-sm">
+                <ul className="mt-1.5 flex flex-col items-start gap-1.5 text-sm">
                   {activeSignups.map((s) => (
                     <li key={s.id}>
                       <button
@@ -267,7 +266,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
               {waitlisted.length > 0 && (
                 <>
                   <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-court-clay">Waitlist</p>
-                  <ul className="mt-1 flex flex-wrap gap-1.5 text-sm">
+                  <ul className="mt-1 flex flex-col items-start gap-1.5 text-sm">
                     {waitlisted.map((s) => (
                       <li key={s.id}>
                         <button
@@ -328,7 +327,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       )}
 
       {!isCancelled && signupOpen && (
-        <div className="ml-2 mt-4">
+        <div className="mt-4">
           {!open ? (
             <button
               onClick={() => setOpen(true)}
