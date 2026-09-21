@@ -252,7 +252,7 @@ function SessionPanel({ session }: { session: Session }) {
             disabled={session.signups.length === 0}
             className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold shadow-sm transition disabled:cursor-default disabled:opacity-60 ${
               belowMinimum
-                ? "bg-black text-white hover:bg-black/80"
+                ? "bg-court-greenDark text-white hover:bg-court-greenDark/85"
                 : "bg-court-navy text-white hover:bg-court-navyLight"
             }`}
           >
