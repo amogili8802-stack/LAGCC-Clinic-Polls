@@ -34,12 +34,11 @@ call from the dashboard; the app never cancels one on its own.
 
 - **Public sign-up pages** at `/week/YYYY-MM-DD` (one Monday-start week at a
   time, with prev/next navigation), where anyone can add multiple kids to a
-  clinic in one sign-up — a cell phone number (for text updates), and each
-  kid's first/last name and member number, no account or password needed —
-  or, for a kid who isn't a club member, a "Non-member" checkbox in place of
-  a member number. Coaches have the same checkbox on the walk-in form. A
-  non-member shows up as "Non-member" wherever a member number would
-  otherwise appear (the coach roster and the CSV export), so it's clear at a
+  clinic in one sign-up — a cell phone number (for text updates) and each
+  kid's first/last name, no account or password needed — plus a "Non-member"
+  checkbox for a kid who isn't a club member. Coaches have the same checkbox
+  on the walk-in form. Membership status shows up on the coach roster,
+  billing, and CSV export as "Member" or "Non-member," so it's clear at a
   glance who isn't a member.
 - **Manage my sign-ups** — a collapsible panel at the top of every week page
   where a parent types the phone number they signed up with to find and

@@ -14,7 +14,7 @@ import {
 
 const clubName = process.env.CLUB_NAME || "The club";
 
-type KidInput = { name: string; memberNumber: string; nonMember?: boolean };
+type KidInput = { name: string; nonMember?: boolean };
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -32,9 +32,6 @@ export async function POST(req: NextRequest) {
   for (const kid of kids) {
     if (!kid.name?.trim()) {
       return NextResponse.json({ error: "Each child needs a name." }, { status: 400 });
-    }
-    if (!kid.nonMember && !kid.memberNumber?.trim()) {
-      return NextResponse.json({ error: "Each child needs a member number, or check \"Non-member\"." }, { status: 400 });
     }
   }
 
@@ -69,7 +66,6 @@ export async function POST(req: NextRequest) {
           sessionId,
           parentPhone: parentPhone.trim(),
           kidName: kid.name.trim(),
-          memberNumber: kid.nonMember ? null : kid.memberNumber.trim(),
           isNonMember: Boolean(kid.nonMember),
           waitlisted: activeCount + i >= session.capacity,
         },

@@ -45,7 +45,6 @@ function parentFacingNote(note: string | null | undefined): string {
 type KidRow = {
   firstName: string;
   lastName: string;
-  memberNumber: string;
   nonMember: boolean;
 };
 
@@ -55,7 +54,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [parentPhone, setParentPhone] = useState("");
-  const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", memberNumber: "", nonMember: false }]);
+  const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false }]);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
@@ -63,18 +62,16 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
 
-  function updateKid(i: number, field: "firstName" | "lastName" | "memberNumber", value: string) {
+  function updateKid(i: number, field: "firstName" | "lastName", value: string) {
     setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, [field]: value } : k)));
   }
 
   function toggleNonMember(i: number) {
-    setKids((prev) =>
-      prev.map((k, idx) => (idx === i ? { ...k, nonMember: !k.nonMember, memberNumber: "" } : k))
-    );
+    setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, nonMember: !k.nonMember } : k)));
   }
 
   function addKidRow() {
-    setKids((prev) => [...prev, { firstName: "", lastName: "", memberNumber: "", nonMember: false }]);
+    setKids((prev) => [...prev, { firstName: "", lastName: "", nonMember: false }]);
   }
 
   function removeKidRow(i: number) {
@@ -90,7 +87,6 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       .map((k) => ({
         firstName: k.firstName.trim(),
         lastName: k.lastName.trim(),
-        memberNumber: k.memberNumber.trim(),
         nonMember: k.nonMember,
       }))
       .filter((k) => k.firstName.length > 0 || k.lastName.length > 0);
@@ -107,10 +103,6 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       setError("Enter a first and last name for each child.");
       return;
     }
-    if (cleanedKids.some((k) => !k.nonMember && k.memberNumber.length === 0)) {
-      setError('Enter a member number for each child, or check "Non-member."');
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -122,7 +114,6 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
           parentPhone: parentPhone.trim(),
           kids: cleanedKids.map((k) => ({
             name: `${k.firstName} ${k.lastName}`.trim(),
-            memberNumber: k.memberNumber,
             nonMember: k.nonMember,
           })),
         }),
@@ -138,7 +129,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
           : "You're signed up! A confirmation text is on its way."
       );
       setParentPhone("");
-      setKids([{ firstName: "", lastName: "", memberNumber: "", nonMember: false }]);
+      setKids([{ firstName: "", lastName: "", nonMember: false }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -259,15 +250,6 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                         </button>
                       )}
                     </div>
-                    {!kid.nonMember && (
-                      <input
-                        type="text"
-                        placeholder="Member #"
-                        value={kid.memberNumber}
-                        onChange={(e) => updateKid(i, "memberNumber", e.target.value)}
-                        className={`w-full ${inputClass}`}
-                      />
-                    )}
                     <label className="flex items-center gap-2 px-0.5 py-0.5 text-xs font-medium text-court-navy/70">
                       <input
                         type="checkbox"

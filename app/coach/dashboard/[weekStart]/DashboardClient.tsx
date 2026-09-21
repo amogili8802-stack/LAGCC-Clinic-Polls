@@ -9,7 +9,6 @@ import { formatDateLong } from "@/lib/date";
 type Signup = {
   id: string;
   kidName: string;
-  memberNumber: string | null;
   isNonMember: boolean;
   parentPhone: string;
   waitlisted: boolean;
@@ -381,7 +380,7 @@ function SessionPanel({ session }: { session: Session }) {
               <thead>
                 <tr className="bg-court-navy/[0.03] text-xs uppercase tracking-wide text-court-navy/40">
                   <th className="px-3 py-2 font-semibold">Child</th>
-                  <th className="px-3 py-2 font-semibold">Member #</th>
+                  <th className="px-3 py-2 font-semibold">Status</th>
                   <th className="px-3 py-2 font-semibold">Phone</th>
                   <th className="px-3 py-2"></th>
                 </tr>
@@ -395,7 +394,7 @@ function SessionPanel({ session }: { session: Session }) {
                       {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
                     </td>
                     <td className="px-3 py-2 text-court-navy/60">
-                      {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : s.memberNumber || "—"}
+                      {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : "Member"}
                     </td>
                     <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
                     <td className="px-3 py-2 text-right">
@@ -415,7 +414,7 @@ function SessionPanel({ session }: { session: Session }) {
                       <span className="font-medium text-red-700">{s.kidName} - cancelled less than 24 hours</span>
                     </td>
                     <td className="px-3 py-2 text-red-700/70">
-                      {s.isNonMember ? "Non-member" : s.memberNumber || "—"}
+                      {s.isNonMember ? "Non-member" : "Member"}
                     </td>
                     <td className="px-3 py-2 text-red-700/70">{s.parentPhone}</td>
                     <td className="px-3 py-2 text-right">
@@ -451,7 +450,7 @@ function SessionPanel({ session }: { session: Session }) {
                   </button>
                 </div>
                 <p className="mt-1 text-court-navy/60">
-                  {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : `Member #${s.memberNumber || "—"}`}
+                  {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : "Member"}
                 </p>
                 <p className="text-court-navy/60">{s.parentPhone}</p>
               </div>
@@ -468,9 +467,7 @@ function SessionPanel({ session }: { session: Session }) {
                     Dismiss
                   </button>
                 </div>
-                <p className="mt-1 text-red-700/70">
-                  {s.isNonMember ? "Non-member" : `Member #${s.memberNumber || "—"}`}
-                </p>
+                <p className="mt-1 text-red-700/70">{s.isNonMember ? "Non-member" : "Member"}</p>
                 <p className="text-red-700/70">{s.parentPhone}</p>
               </div>
             ))}
@@ -504,7 +501,6 @@ function AddWalkInForm({
   onClose: () => void;
 }) {
   const [kidName, setKidName] = useState("");
-  const [memberNumber, setMemberNumber] = useState("");
   const [isNonMember, setIsNonMember] = useState(false);
   const [parentPhone, setParentPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -525,7 +521,6 @@ function AddWalkInForm({
         body: JSON.stringify({
           sessionId,
           kidName,
-          memberNumber: isNonMember ? undefined : memberNumber.trim() || undefined,
           isNonMember,
           parentPhone,
         }),
@@ -544,12 +539,7 @@ function AddWalkInForm({
   return (
     <form onSubmit={submit} className="mt-2 grid gap-2.5 rounded-xl border border-court-navy/10 bg-court-cream/50 p-4 sm:grid-cols-2">
       <input placeholder="Child name" value={kidName} onChange={(e) => setKidName(e.target.value)} className={inputClass} />
-      {isNonMember ? (
-        <div />
-      ) : (
-        <input placeholder="Member # (optional)" value={memberNumber} onChange={(e) => setMemberNumber(e.target.value)} className={inputClass} />
-      )}
-      <input placeholder="Phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={`sm:col-span-2 ${inputClass}`} />
+      <input placeholder="Phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={inputClass} />
       <label className="flex items-center gap-2 text-xs font-medium text-court-navy/70 sm:col-span-2">
         <input
           type="checkbox"

@@ -21,31 +21,31 @@ export default function PrivacyPolicyPage() {
         <div>
           <h2 className="font-display text-base font-semibold text-court-navy">Information we collect</h2>
           <p className="mt-1.5">
-            When a parent creates an account, we collect their name, phone number, an optional email
-            address, and a password. When signing a child up for a clinic, we also collect the
-            child&apos;s name, age, and club member number (if applicable). Coaches who log in provide
-            a name, email, and password.
+            When signing a child up for a clinic, we collect a parent or guardian&apos;s cell phone
+            number and the child&apos;s first and last name, plus whether the child is a club member.
+            No account or password is required to sign up. Coaches who log in to manage clinics
+            provide a name, email, and password.
           </p>
         </div>
 
         <div>
           <h2 className="font-display text-base font-semibold text-court-navy">How we use it</h2>
           <p className="mt-1.5">
-            We use this information to create and manage accounts, process clinic sign-ups, and send
-            SMS text messages and, where an email is provided, emails about clinic activity —
-            including sign-up confirmations, waitlist status, and cancellation notices (for example, if
-            a clinic is cancelled due to weather or low enrollment). We do not send marketing texts, and
-            we do not sell or share your SMS opt-in data or personal information with third parties
-            for marketing purposes.
+            We use this information to process clinic sign-ups and send SMS text messages about
+            clinic activity — including sign-up confirmations, waitlist status, and cancellation
+            notices (for example, if a clinic is cancelled due to weather or low enrollment). We do
+            not send marketing texts, and we do not sell or share your SMS opt-in data or personal
+            information with third parties for marketing purposes.
           </p>
         </div>
 
         <div>
           <h2 className="font-display text-base font-semibold text-court-navy">Data retention and security</h2>
           <p className="mt-1.5">
-            Account and sign-up information is retained for as long as the account is active, so
-            parents can view their clinic history. Passwords are stored as one-way hashes, never in
-            plain text. We don&apos;t use third-party advertising or analytics trackers on this site.
+            Sign-up information is retained so a parent can look up and manage their own sign-ups by
+            phone number, and so coaches can maintain accurate clinic rosters. Coach passwords are
+            stored as one-way hashes, never in plain text. We don&apos;t use third-party advertising
+            or analytics trackers on this site.
           </p>
         </div>
 

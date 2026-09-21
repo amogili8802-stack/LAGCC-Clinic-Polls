@@ -22,7 +22,7 @@ export default async function CoachBillingPage() {
       records={lateCancellations.map((s) => ({
         id: s.id,
         kidName: s.kidName,
-        memberNumber: s.isNonMember ? "Non-member" : s.memberNumber,
+        memberStatus: s.isNonMember ? "Non-member" : "Member",
         parentPhone: s.parentPhone,
         clinicLabel: `${s.session.template.name} (${formatTime(s.session.template.startTime)})`,
         clinicDate: formatDateLong(s.session.date),
