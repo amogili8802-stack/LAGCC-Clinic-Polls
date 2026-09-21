@@ -23,7 +23,6 @@ export default async function CoachBillingPage() {
         id: s.id,
         kidName: s.kidName,
         memberNumber: s.isNonMember ? "Non-member" : s.memberNumber,
-        parentName: s.parentName,
         parentPhone: s.parentPhone,
         clinicLabel: `${s.session.template.name} (${formatTime(s.session.template.startTime)})`,
         clinicDate: formatDateLong(s.session.date),

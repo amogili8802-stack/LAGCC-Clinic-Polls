@@ -5,20 +5,11 @@ import { useState } from "react";
 type MySignup = {
   id: string;
   kidName: string;
-  kidAge: number;
   waitlisted: boolean;
   cancelled: boolean;
   lateCancellation: boolean;
   sessionLabel: string;
   sessionDate: string;
-  recurring: boolean;
-};
-
-type MyRecurring = {
-  id: string;
-  kidName: string;
-  kidAge: number;
-  clinicLabel: string;
 };
 
 export default function LookupPanel() {
@@ -26,7 +17,6 @@ export default function LookupPanel() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<MySignup[] | null>(null);
-  const [recurring, setRecurring] = useState<MyRecurring[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -40,11 +30,9 @@ export default function LookupPanel() {
       if (!res.ok) {
         setError(data.error || "Couldn't look that up.");
         setResults(null);
-        setRecurring(null);
         return;
       }
       setResults(data.signups);
-      setRecurring(data.recurring);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -62,30 +50,11 @@ export default function LookupPanel() {
       });
       if (res.ok) {
         const data = await res.json();
-        setResults((prev) =>
-          prev
-            ? prev.map((s) => (s.id === id ? { ...s, lateCancellation: Boolean(data.lateCancellation) } : s))
-            : prev
-        );
-        if (!data.lateCancellation) {
+        if (data.lateCancellation) {
+          setResults((prev) => (prev ? prev.map((s) => (s.id === id ? { ...s, lateCancellation: true } : s)) : prev));
+        } else {
           setResults((prev) => (prev ? prev.filter((s) => s.id !== id) : prev));
         }
-      }
-    } finally {
-      setRemovingId(null);
-    }
-  }
-
-  async function stopRecurring(id: string) {
-    setRemovingId(id);
-    try {
-      const res = await fetch("/api/signup/recurring/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recurringId: id, phone: phone.trim() }),
-      });
-      if (res.ok) {
-        setRecurring((prev) => (prev ? prev.filter((r) => r.id !== id) : prev));
       }
     } finally {
       setRemovingId(null);
@@ -127,81 +96,42 @@ export default function LookupPanel() {
           </form>
           {error && <p className="font-medium text-red-600">{error}</p>}
 
-          {recurring && recurring.length > 0 && (
-            <div>
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-court-navy/40">
-                🔁 Weekly sign-ups
-              </p>
-              <ul className="space-y-2">
-                {recurring.map((r) => (
-                  <li
-                    key={r.id}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-court-navy/10 bg-white px-3.5 py-2.5 shadow-sm"
-                  >
-                    <span>
-                      <strong className="text-court-navy">{r.kidName}</strong>{" "}
-                      <span className="text-court-navy/40">(Age: {r.kidAge})</span> — every {r.clinicLabel}
-                    </span>
-                    <button
-                      onClick={() => stopRecurring(r.id)}
-                      disabled={removingId === r.id}
-                      className="shrink-0 font-semibold text-red-600 hover:underline disabled:opacity-60"
-                    >
-                      {removingId === r.id ? "Stopping…" : "Stop"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {results && results.length === 0 && (
             <p className="text-court-navy/50">No upcoming sign-ups found for that number.</p>
           )}
           {results && results.length > 0 && (
-            <div>
-              {recurring && recurring.length > 0 && (
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-court-navy/40">
-                  Upcoming clinics
-                </p>
+            <ul className="space-y-2">
+              {results.map((s) =>
+                s.lateCancellation ? (
+                  <li
+                    key={s.id}
+                    className="rounded-lg border border-red-100 bg-red-50/60 px-3.5 py-2.5 text-red-800 shadow-sm"
+                  >
+                    <span className="font-medium text-red-700">{s.kidName} — cancelled less than 24 hours</span> —{" "}
+                    {s.sessionLabel} on {s.sessionDate}
+                    <p className="mt-0.5 text-xs text-red-700/70">Still billed per club policy.</p>
+                  </li>
+                ) : (
+                  <li
+                    key={s.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-court-navy/10 bg-white px-3.5 py-2.5 shadow-sm"
+                  >
+                    <span>
+                      <strong className="text-court-navy">{s.kidName}</strong> — {s.sessionLabel} on {s.sessionDate}
+                      {s.waitlisted && <em className="ml-1 font-medium text-court-gold">(waitlist)</em>}
+                      {s.cancelled && <em className="ml-1 font-medium text-red-700">(clinic cancelled)</em>}
+                    </span>
+                    <button
+                      onClick={() => removeSignup(s.id)}
+                      disabled={removingId === s.id}
+                      className="shrink-0 font-semibold text-red-600 hover:underline disabled:opacity-60"
+                    >
+                      {removingId === s.id ? "Removing…" : "Remove"}
+                    </button>
+                  </li>
+                )
               )}
-              <ul className="space-y-2">
-                {results.map((s) =>
-                  s.lateCancellation ? (
-                    <li
-                      key={s.id}
-                      className="rounded-lg border border-red-100 bg-red-50/60 px-3.5 py-2.5 text-red-800 shadow-sm"
-                    >
-                      <span className="font-medium text-red-700">{s.kidName} — cancelled less than 24 hours</span>{" "}
-                      <span className="text-red-700/50">(Age: {s.kidAge})</span> — {s.sessionLabel} on{" "}
-                      {s.sessionDate}
-                      <p className="mt-0.5 text-xs text-red-700/70">Still billed per club policy.</p>
-                    </li>
-                  ) : (
-                    <li
-                      key={s.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border border-court-navy/10 bg-white px-3.5 py-2.5 shadow-sm"
-                    >
-                      <span>
-                        {s.recurring && <span title="From a weekly sign-up">🔁 </span>}
-                        <strong className="text-court-navy">{s.kidName}</strong>{" "}
-                        <span className="text-court-navy/40">(Age: {s.kidAge})</span> — {s.sessionLabel} on{" "}
-                        {s.sessionDate}
-                        {s.waitlisted && <em className="ml-1 font-medium text-court-gold">(waitlist)</em>}
-                        {s.cancelled && <em className="ml-1 font-medium text-red-700">(clinic cancelled)</em>}
-                      </span>
-                      <button
-                        onClick={() => removeSignup(s.id)}
-                        disabled={removingId === s.id}
-                        className="shrink-0 font-semibold text-red-600 hover:underline disabled:opacity-60"
-                      >
-                        {removingId === s.id ? "Removing…" : "Remove"}
-                      </button>
-                    </li>
-                  )
-                )}
-              </ul>
-            </div>
+            </ul>
           )}
         </div>
       )}

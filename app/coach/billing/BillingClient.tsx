@@ -7,7 +7,6 @@ type Record = {
   id: string;
   kidName: string;
   memberNumber: string | null;
-  parentName: string;
   parentPhone: string;
   clinicLabel: string;
   clinicDate: string;
@@ -63,7 +62,6 @@ export default function BillingClient({ records: initialRecords }: { records: Re
                   <th className="px-4 py-3 font-semibold">Child</th>
                   <th className="px-4 py-3 font-semibold">Member #</th>
                   <th className="px-4 py-3 font-semibold">Clinic</th>
-                  <th className="px-4 py-3 font-semibold">Parent</th>
                   <th className="px-4 py-3 font-semibold">Phone</th>
                   <th className="px-4 py-3"></th>
                 </tr>
@@ -76,7 +74,6 @@ export default function BillingClient({ records: initialRecords }: { records: Re
                     <td className="px-4 py-3 text-red-700/70">
                       {r.clinicLabel} — {r.clinicDate}
                     </td>
-                    <td className="px-4 py-3 text-red-700/70">{r.parentName}</td>
                     <td className="px-4 py-3 text-red-700/70">{r.parentPhone}</td>
                     <td className="px-4 py-3 text-right">
                       <button
@@ -111,9 +108,7 @@ export default function BillingClient({ records: initialRecords }: { records: Re
                 <p className="text-red-700/70">
                   {r.clinicLabel} — {r.clinicDate}
                 </p>
-                <p className="text-red-700/70">
-                  {r.parentName} · {r.parentPhone}
-                </p>
+                <p className="text-red-700/70">{r.parentPhone}</p>
               </div>
             ))}
           </div>

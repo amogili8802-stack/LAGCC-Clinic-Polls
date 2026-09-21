@@ -2,8 +2,8 @@
 
 A sign-up site for weekly kids' tennis clinics: parents pick a clinic and add
 one or more kids with just a name and phone number (no account needed), and
-coaches log in to manage rosters and cancel clinics (with an automatic text
-message to everyone signed up).
+coaches log in to manage rosters and manually cancel clinics when needed
+(with an automatic text message to everyone signed up).
 
 ## The weekly schedule
 
@@ -26,40 +26,29 @@ run repeatedly since it upserts by name/day/time.
 
 Default capacity per clinic is 4–8 kids (both editable per-session by a
 coach from the dashboard): once full, additional sign-ups go on a waitlist
-and are automatically promoted if a spot opens up; if a clinic still hasn't
-hit its minimum by 8pm the night before, it's automatically cancelled and
-everyone signed up gets a text (see **Auto-cancellation for low sign-ups**
-below).
+and are automatically promoted if a spot opens up. Cancelling a clinic —
+for weather, low sign-ups, or anything else — is always a coach's manual
+call from the dashboard; the app never cancels one on its own.
 
 ## What's built
 
 - **Public sign-up pages** at `/week/YYYY-MM-DD` (one Monday-start week at a
   time, with prev/next navigation), where anyone can add multiple kids to a
-  clinic in one sign-up — parent name, phone, and each kid's name/age/member
-  number, no account or password needed — or, for a kid who isn't a club
-  member, a "Not a club member" checkbox in place of a member number.
-  Coaches have the same checkbox on the walk-in form. A non-member shows up
-  as "Non-member" wherever a member number would otherwise appear (the coach
-  roster and the CSV export), so it's clear at a glance who isn't a member.
+  clinic in one sign-up — a cell phone number (for text updates), and each
+  kid's first/last name and member number, no account or password needed —
+  or, for a kid who isn't a club member, a "Non-member" checkbox in place of
+  a member number. Coaches have the same checkbox on the walk-in form. A
+  non-member shows up as "Non-member" wherever a member number would
+  otherwise appear (the coach roster and the CSV export), so it's clear at a
+  glance who isn't a member.
 - **Manage my sign-ups** — a collapsible panel at the top of every week page
   where a parent types the phone number they signed up with to find and
-  cancel their own kids' sign-ups (and stop a weekly recurring one), no
-  account or login needed — the same phone number is all that identifies a
-  sign-up as theirs. A clinic they cancelled within 24 hours stays visible in
-  the results (rather than disappearing) until its date passes, flagged in
-  red with "— cancelled less than 24 hours" and a note that it's still
-  billed — mirroring how the coach's own roster flags it.
-- **Weekly recurring sign-ups** — a parent can check "🔁 Sign up
-  automatically every week until I cancel" on any child when signing up.
-  From then on, every time that week's clinics open, the kid is
-  auto-enrolled in the matching clinic with no action needed — a
-  confirmation (or waitlist) text goes out the same as a normal sign-up.
-  Recurring enrollment runs as part of the same lazy per-week setup as
-  everything else (see **Rolling weekly release**), so it happens the
-  moment anyone loads that week, not on a separate schedule. Parents manage
-  or stop a recurring sign-up from the "Manage my sign-ups" phone lookup
-  panel; stopping it only affects future weeks, not ones already created.
-  Coaches can also check the same box when adding a walk-in.
+  cancel their own kids' sign-ups, no account or login needed — the same
+  phone number is all that identifies a sign-up as theirs. A clinic they
+  cancelled within 24 hours stays visible in the results (rather than
+  disappearing) until its date passes, flagged in red with "— cancelled less
+  than 24 hours" and a note that it's still billed — mirroring how the
+  coach's own roster flags it.
 - **Rolling weekly release** — a week only opens for public sign-up at
   10:00am (club-local time, `CLUB_TIMEZONE`) on the Thursday of the week
   before it. The current week is always open; anything further out shows a
@@ -70,21 +59,17 @@ below).
 - **Waitlisting** once a clinic hits capacity.
 - **Nightly 8pm sign-up cutoff** — each clinic stops accepting new public
   sign-ups at 8:00pm (club-local time) the night before it runs, shown as a
-  "Sign-ups closed" badge in place of the Sign Up button. This is separate
-  from and happens regardless of the auto-cancellation check below — a
-  clinic that already has enough kids by 8pm just closes, it isn't
-  cancelled. Enforced on the page and in the sign-up API. Coaches can still
-  add a walk-in after the cutoff from the dashboard.
-- **Auto-cancellation for low sign-ups** — every clinic has a minimum
-  (default 4) and maximum (default 8), both coach-editable per session. The
-  same nightly 8pm check that closes sign-ups also cancels the clinic (with
-  reason "Not enough sign-ups" and a text to everyone signed up, including
-  the waitlist) if it's still under its minimum at that point — late
-  cancellations still count toward the minimum, since they're still billed.
-  If the clinic instead has enough sign-ups to stay on, everyone actually
-  attending (not the waitlist, not anyone who's cancelled) gets a text
-  confirming the clinic is on. See **Deploying** for the one-time cron setup
-  this needs.
+  "Sign-ups closed" badge in place of the Sign Up button. Enforced on the
+  page and in the sign-up API. Coaches can still add a walk-in after the
+  cutoff from the dashboard.
+- **Manual cancellation only** — every clinic has a minimum (default 4) and
+  maximum (default 8), both coach-editable per session, purely as a
+  reference: the "signed up" badge on the coach dashboard turns gold and
+  reads "below min" once a clinic is short of its minimum (late
+  cancellations still count toward it, since they're still billed), so a
+  coach can see at a glance which clinics might be worth cancelling — but
+  nothing ever cancels a clinic automatically. A coach always makes that
+  call themselves from **Cancel Clinic** on the dashboard.
 - **Late-cancellation tracking (24-hour policy)** — per club policy, cancelling
   a sign-up less than 24 hours before the clinic's start time still incurs a
   charge. A self-serve cancellation made 24+ hours ahead simply removes the
@@ -109,10 +94,13 @@ below).
     inline any time). A coach with a phone number gets a text alongside the
     parents the moment a clinic is cancelled; a coach with no phone number
     just doesn't get one.
-- **Coach dashboard** (`/coach/dashboard`) per week: view every roster
-  (including each kid's member number), add a walk-in/phone sign-up, remove
-  a kid, edit a clinic's minimum and maximum, export a roster as CSV, and
-  cancel or reopen a clinic.
+- **Coach dashboard** (`/coach/dashboard`) per week: a bold, clickable
+  "X/8 signed up" badge on every clinic toggles its roster open or closed
+  (collapsed by default is never forced — it starts open) so it's easy to
+  scan who's signed up and how many at a glance, plus a running total for
+  the whole week shown right under "Signed in as [coach]". From there: add
+  a walk-in/phone sign-up, remove a kid, edit a clinic's minimum and
+  maximum, export a roster as CSV, and cancel or reopen a clinic.
 - **Billing** (`/coach/billing`) — every late cancellation across every week,
   in one list, instead of having to click through each week's dashboard to
   find the red flags. A "Dismiss" button clears a row once it's been billed.
@@ -128,17 +116,11 @@ below).
 
 ## Ideas not yet built (worth adding later)
 
-- Automated day-before reminder texts (the cron infrastructure from
-  auto-cancellation could easily grow a second scheduled check for this).
-- Email notifications alongside text (email field is already collected).
+- Automated day-before reminder texts.
+- Email notifications alongside text.
 - Multiple named coach roles/permissions (currently any coach account can do
   anything).
 - A real weather API hook to suggest "Rain" cancellations automatically.
-- A coach-facing view of all active recurring sign-ups (today a coach can
-  see the "🔁 weekly" tag on a roster and add one via the walk-in form, but
-  stopping someone's recurring sign-up on their behalf currently has to go
-  through the "Manage my sign-ups" phone lookup panel, same as a parent
-  would).
 - Payment/billing integration if clinics ever need to be paid per session —
   today the app only flags late cancellations (on the coach's Billing page
   and in the phone lookup results) for a coach to bill manually, it doesn't
@@ -186,12 +168,6 @@ account to work:
   instead of sending them.
 - **`NEXTAUTH_SECRET`** — required for coach login sessions. Generate one
   with `openssl rand -base64 32`.
-- **`CRON_SECRET`** — optional but recommended once deployed. If set,
-  Vercel automatically sends it as a bearer token when it triggers the
-  auto-cancellation job, and the job rejects any request without it — so
-  nobody else can trigger a mass-cancellation by hitting the URL. Generate
-  one the same way as `NEXTAUTH_SECRET` and add it in Vercel's project
-  settings (it doesn't need to be in your local `.env`).
 - **`CLUB_TIMEZONE`** — optional, defaults to `America/Los_Angeles`. Only
   used to compute the Thursday-10am weekly release time. Set it to your
   club's IANA timezone (e.g. `America/New_York`) if it's not Pacific.
@@ -210,21 +186,11 @@ Railway, Render, or any Node host. On Vercel specifically:
    and branch.
 2. Before the first deploy, add the environment variables above in the
    project's settings (`DATABASE_URL`, `NEXTAUTH_URL` — your `*.vercel.app`
-   URL, `NEXTAUTH_SECRET`, `CRON_SECRET`, `SEED_COACH_EMAIL`/`PASSWORD`/`NAME`,
-   and the Twilio vars once you have them).
+   URL, `NEXTAUTH_SECRET`, `SEED_COACH_EMAIL`/`PASSWORD`/`NAME`, and the
+   Twilio vars once you have them).
 3. Deploy. The build itself creates the tables and loads the clinic
    schedule + coach account — no manual step needed.
 4. Give parents the site's home page URL — it always redirects to the
    current week. Log in as a coach at `/coach/login`.
 
 Every future `git push` to the connected branch redeploys automatically.
-
-### Auto-cancellation cron job
-
-`vercel.json` schedules `/api/cron/auto-cancel-low-signups` to run once a
-day at 4:00 UTC (8pm Pacific Standard Time; Vercel Cron doesn't shift for
-daylight saving, so it lands around 9pm Pacific in the summer). If your
-club is in a different timezone, edit the `schedule` in `vercel.json`
-(cron syntax, always UTC) to `8 hours before your local midnight-shifted
-clinic day` — e.g. 8pm Eastern is `0 1 * * *`. Vercel's free Hobby plan
-allows cron jobs that run at most once a day, which this fits.

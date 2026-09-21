@@ -9,13 +9,9 @@ import { formatDateLong } from "@/lib/date";
 type Signup = {
   id: string;
   kidName: string;
-  kidAge: number;
   memberNumber: string | null;
   isNonMember: boolean;
-  recurringSignupId: string | null;
-  parentName: string;
   parentPhone: string;
-  parentEmail: string | null;
   waitlisted: boolean;
   addedByCoach: boolean;
   createdAt: string;
@@ -65,6 +61,11 @@ export default function DashboardClient({
     byDate.get(s.date)!.push(s);
   }
 
+  const weekTotalSignedUp = sessions.reduce(
+    (sum, s) => sum + s.signups.filter((sg) => !sg.waitlisted && !sg.cancelledAt).length,
+    0
+  );
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-court-navy/10 bg-white p-5 shadow-card">
@@ -73,7 +74,9 @@ export default function DashboardClient({
           <h1 className="mt-0.5 font-display text-xl font-semibold tracking-tight text-court-navy">
             Week of {weekLabel}
           </h1>
-          <p className="mt-0.5 text-sm text-court-navy/50">Signed in as {coachName}</p>
+          <p className="mt-0.5 text-sm text-court-navy/50">
+            Signed in as {coachName} · {weekTotalSignedUp} signed up this week
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -139,6 +142,7 @@ function SessionPanel({ session }: { session: Session }) {
   const [reason, setReason] = useState("RAIN");
   const [note, setNote] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  const [showRoster, setShowRoster] = useState(true);
   const [capacity, setCapacity] = useState(session.capacity);
   const [minSignups, setMinSignups] = useState(session.minSignups);
 
@@ -146,9 +150,9 @@ function SessionPanel({ session }: { session: Session }) {
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
   const lateCancelled = session.signups.filter((s) => s.cancelledAt && s.lateCancellation);
   const isCancelled = session.status === "CANCELLED";
-  // Matches the auto-cancel cron's own count: late cancellations are still
-  // billed, so they still count toward the minimum even though they won't
-  // show up on the roster above.
+  // Late cancellations are still billed, so they still count toward the
+  // minimum even though they won't show up on the roster above — this is
+  // purely informational now, for a coach deciding whether to cancel by hand.
   const belowMinimum = !isCancelled && activeSignups.length + lateCancelled.length < session.minSignups;
 
   async function refresh() {
@@ -244,15 +248,24 @@ function SessionPanel({ session }: { session: Session }) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
-              belowMinimum ? "bg-court-goldLight text-court-gold" : "bg-court-navy/[0.06] text-court-navy/70"
+          <button
+            onClick={() => setShowRoster((v) => !v)}
+            disabled={session.signups.length === 0}
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold shadow-sm transition disabled:cursor-default disabled:opacity-60 ${
+              belowMinimum
+                ? "bg-court-gold text-white hover:bg-court-gold/90"
+                : "bg-court-navy text-white hover:bg-court-navyLight"
             }`}
           >
             {activeSignups.length}/{session.capacity} signed up
             {waitlisted.length > 0 && ` · +${waitlisted.length} waitlist`}
             {belowMinimum && ` · below min (${session.minSignups})`}
-          </span>
+            {session.signups.length > 0 && (
+              <span className={`transition-transform ${showRoster ? "rotate-180" : ""}`} aria-hidden>
+                ▾
+              </span>
+            )}
+          </button>
           <a
             href={`/api/coach/session/${session.id}/roster`}
             className="rounded-full border border-court-navy/15 px-3 py-1 text-xs font-medium text-court-navy/70 transition hover:border-court-navy/30 hover:bg-court-navy/5"
@@ -359,14 +372,8 @@ function SessionPanel({ session }: { session: Session }) {
           Save
         </button>
       </div>
-      {!isCancelled && (
-        <p className="ml-2 mt-1 text-xs text-court-navy/35">
-          Auto-cancels at 8pm the day before if under {session.minSignups} sign-ups (late cancellations still
-          count) — otherwise everyone gets a text confirming the clinic is on.
-        </p>
-      )}
 
-      {session.signups.length > 0 && (
+      {showRoster && session.signups.length > 0 && (
         <div className="ml-2 mt-4">
           {/* Table layout for sm+ screens */}
           <div className="hidden overflow-hidden rounded-xl border border-court-navy/10 sm:block">
@@ -375,7 +382,6 @@ function SessionPanel({ session }: { session: Session }) {
                 <tr className="bg-court-navy/[0.03] text-xs uppercase tracking-wide text-court-navy/40">
                   <th className="px-3 py-2 font-semibold">Child</th>
                   <th className="px-3 py-2 font-semibold">Member #</th>
-                  <th className="px-3 py-2 font-semibold">Parent</th>
                   <th className="px-3 py-2 font-semibold">Phone</th>
                   <th className="px-3 py-2"></th>
                 </tr>
@@ -384,16 +390,13 @@ function SessionPanel({ session }: { session: Session }) {
                 {[...activeSignups, ...waitlisted].map((s) => (
                   <tr key={s.id} className="border-t border-court-navy/10">
                     <td className="px-3 py-2">
-                      <span className="font-medium text-court-navy/80">{s.kidName}</span>{" "}
-                      <span className="text-court-navy/40">(Age: {s.kidAge})</span>
+                      <span className="font-medium text-court-navy/80">{s.kidName}</span>
                       {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
-                      {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁 weekly</span>}
                       {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
                     </td>
                     <td className="px-3 py-2 text-court-navy/60">
                       {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : s.memberNumber || "—"}
                     </td>
-                    <td className="px-3 py-2 text-court-navy/60">{s.parentName}</td>
                     <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
                     <td className="px-3 py-2 text-right">
                       <button
@@ -409,15 +412,11 @@ function SessionPanel({ session }: { session: Session }) {
                 {lateCancelled.map((s) => (
                   <tr key={s.id} className="border-t border-court-navy/10 bg-red-50/60">
                     <td className="px-3 py-2">
-                      <span className="font-medium text-red-700">
-                        {s.kidName} - cancelled less than 24 hours
-                      </span>{" "}
-                      <span className="text-red-700/50">(Age: {s.kidAge})</span>
+                      <span className="font-medium text-red-700">{s.kidName} - cancelled less than 24 hours</span>
                     </td>
                     <td className="px-3 py-2 text-red-700/70">
                       {s.isNonMember ? "Non-member" : s.memberNumber || "—"}
                     </td>
-                    <td className="px-3 py-2 text-red-700/70">{s.parentName}</td>
                     <td className="px-3 py-2 text-red-700/70">{s.parentPhone}</td>
                     <td className="px-3 py-2 text-right">
                       <button
@@ -440,9 +439,8 @@ function SessionPanel({ session }: { session: Session }) {
               <div key={s.id} className="rounded-xl border border-court-navy/10 p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-court-navy/80">
-                    {s.kidName} <span className="font-normal text-court-navy/40">(Age: {s.kidAge})</span>
+                    {s.kidName}
                     {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
-                    {s.recurringSignupId && <span className="ml-1.5 text-court-navy/40">· 🔁</span>}
                   </p>
                   <button
                     onClick={() => removeSignup(s.id)}
@@ -455,18 +453,13 @@ function SessionPanel({ session }: { session: Session }) {
                 <p className="mt-1 text-court-navy/60">
                   {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : `Member #${s.memberNumber || "—"}`}
                 </p>
-                <p className="text-court-navy/60">
-                  {s.parentName} · {s.parentPhone}
-                </p>
+                <p className="text-court-navy/60">{s.parentPhone}</p>
               </div>
             ))}
             {lateCancelled.map((s) => (
               <div key={s.id} className="rounded-xl border border-court-navy/10 bg-red-50/60 p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-red-700">
-                    {s.kidName} - cancelled less than 24 hours{" "}
-                    <span className="font-normal text-red-700/50">(Age: {s.kidAge})</span>
-                  </p>
+                  <p className="font-medium text-red-700">{s.kidName} - cancelled less than 24 hours</p>
                   <button
                     onClick={() => dismissCancellation(s.id)}
                     disabled={busy}
@@ -478,9 +471,7 @@ function SessionPanel({ session }: { session: Session }) {
                 <p className="mt-1 text-red-700/70">
                   {s.isNonMember ? "Non-member" : `Member #${s.memberNumber || "—"}`}
                 </p>
-                <p className="text-red-700/70">
-                  {s.parentName} · {s.parentPhone}
-                </p>
+                <p className="text-red-700/70">{s.parentPhone}</p>
               </div>
             ))}
           </div>
@@ -515,19 +506,15 @@ function AddWalkInForm({
   const [kidName, setKidName] = useState("");
   const [memberNumber, setMemberNumber] = useState("");
   const [isNonMember, setIsNonMember] = useState(false);
-  const [kidAge, setKidAge] = useState("");
-  const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
-  const [recurring, setRecurring] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const age = parseInt(kidAge, 10);
-    if (!kidName.trim() || !parentName.trim() || !parentPhone.trim() || Number.isNaN(age)) {
-      setError("Fill in child name, age, parent name and phone.");
+    if (!kidName.trim() || !parentPhone.trim()) {
+      setError("Fill in child name and phone.");
       return;
     }
     setSubmitting(true);
@@ -540,10 +527,7 @@ function AddWalkInForm({
           kidName,
           memberNumber: isNonMember ? undefined : memberNumber.trim() || undefined,
           isNonMember,
-          kidAge: age,
-          parentName,
           parentPhone,
-          recurring,
         }),
       });
       if (res.ok) {
@@ -565,9 +549,7 @@ function AddWalkInForm({
       ) : (
         <input placeholder="Member # (optional)" value={memberNumber} onChange={(e) => setMemberNumber(e.target.value)} className={inputClass} />
       )}
-      <input placeholder="Age" type="number" value={kidAge} onChange={(e) => setKidAge(e.target.value)} className={inputClass} />
-      <input placeholder="Parent name" value={parentName} onChange={(e) => setParentName(e.target.value)} className={inputClass} />
-      <input placeholder="Parent phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={inputClass} />
+      <input placeholder="Phone" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className={`sm:col-span-2 ${inputClass}`} />
       <label className="flex items-center gap-2 text-xs font-medium text-court-navy/70 sm:col-span-2">
         <input
           type="checkbox"
@@ -576,15 +558,6 @@ function AddWalkInForm({
           className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
         />
         Non-member
-      </label>
-      <label className="flex items-center gap-2 text-xs font-medium text-court-navy/70 sm:col-span-2">
-        <input
-          type="checkbox"
-          checked={recurring}
-          onChange={(e) => setRecurring(e.target.checked)}
-          className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
-        />
-        🔁 Sign up automatically every week until cancelled
       </label>
       {error && <p className="text-sm font-medium text-red-600 sm:col-span-2">{error}</p>}
       <div className="flex gap-2 pt-1 sm:col-span-2">

@@ -6,9 +6,7 @@ import { formatTime } from "@/lib/clinics";
 type Signup = {
   id: string;
   kidName: string;
-  kidAge: number;
   waitlisted: boolean;
-  recurringSignupId?: string | null;
   cancelledAt?: string | null;
 };
 
@@ -47,9 +45,7 @@ function parentFacingNote(note: string | null | undefined): string {
 type KidRow = {
   firstName: string;
   lastName: string;
-  age: string;
   memberNumber: string;
-  recurring: boolean;
   nonMember: boolean;
 };
 
@@ -58,12 +54,8 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
-  const [parentEmail, setParentEmail] = useState("");
-  const [kids, setKids] = useState<KidRow[]>([
-    { firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false },
-  ]);
+  const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", memberNumber: "", nonMember: false }]);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
@@ -71,12 +63,8 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
 
-  function updateKid(i: number, field: "firstName" | "lastName" | "age" | "memberNumber", value: string) {
+  function updateKid(i: number, field: "firstName" | "lastName" | "memberNumber", value: string) {
     setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, [field]: value } : k)));
-  }
-
-  function toggleRecurring(i: number) {
-    setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, recurring: !k.recurring } : k)));
   }
 
   function toggleNonMember(i: number) {
@@ -86,10 +74,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   }
 
   function addKidRow() {
-    setKids((prev) => [
-      ...prev,
-      { firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false },
-    ]);
+    setKids((prev) => [...prev, { firstName: "", lastName: "", memberNumber: "", nonMember: false }]);
   }
 
   function removeKidRow(i: number) {
@@ -105,15 +90,13 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       .map((k) => ({
         firstName: k.firstName.trim(),
         lastName: k.lastName.trim(),
-        age: parseInt(k.age, 10),
         memberNumber: k.memberNumber.trim(),
-        recurring: k.recurring,
         nonMember: k.nonMember,
       }))
       .filter((k) => k.firstName.length > 0 || k.lastName.length > 0);
 
-    if (!parentName.trim() || !parentPhone.trim()) {
-      setError("Parent name and phone number are required.");
+    if (!parentPhone.trim()) {
+      setError("Cell phone number is required.");
       return;
     }
     if (cleanedKids.length === 0) {
@@ -122,10 +105,6 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
     }
     if (cleanedKids.some((k) => k.firstName.length === 0 || k.lastName.length === 0)) {
       setError("Enter a first and last name for each child.");
-      return;
-    }
-    if (cleanedKids.some((k) => Number.isNaN(k.age) || k.age < 0 || k.age > 18)) {
-      setError("Enter a valid age for each child.");
       return;
     }
     if (cleanedKids.some((k) => !k.nonMember && k.memberNumber.length === 0)) {
@@ -140,14 +119,10 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: session.id,
-          parentName: parentName.trim(),
           parentPhone: parentPhone.trim(),
-          parentEmail: parentEmail.trim() || undefined,
           kids: cleanedKids.map((k) => ({
             name: `${k.firstName} ${k.lastName}`.trim(),
-            age: k.age,
             memberNumber: k.memberNumber,
-            recurring: k.recurring,
             nonMember: k.nonMember,
           })),
         }),
@@ -157,19 +132,13 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         setError(data.error || "Something went wrong. Please try again.");
         return;
       }
-      const recurringNote =
-        data.recurringCount > 0
-          ? ` ${data.recurringCount === 1 ? "That child is" : `${data.recurringCount} of those children are`} now signed up automatically every week.`
-          : "";
       setSuccess(
-        (data.waitlistedCount > 0
+        data.waitlistedCount > 0
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
-          : "You're signed up! A confirmation text is on its way.") + recurringNote
+          : "You're signed up! A confirmation text is on its way."
       );
-      setParentName("");
       setParentPhone("");
-      setParentEmail("");
-      setKids([{ firstName: "", lastName: "", age: "", memberNumber: "", recurring: false, nonMember: false }]);
+      setKids([{ firstName: "", lastName: "", memberNumber: "", nonMember: false }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -227,15 +196,14 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         <ul className="mt-3 ml-2 flex flex-wrap gap-1.5 text-sm text-court-navy/80">
           {activeSignups.map((s) => (
             <li key={s.id} className="rounded-full bg-court-navy/[0.05] px-3 py-1 font-medium">
-              {s.recurringSignupId && <span title="Signed up automatically every week">🔁 </span>}
-              {s.kidName} <span className="text-court-navy/40">(Age: {s.kidAge})</span>
+              {s.kidName}
             </li>
           ))}
         </ul>
       )}
       {waitlisted.length > 0 && (
         <div className="mt-2 ml-2 text-xs font-medium text-court-clay">
-          Waitlist: {waitlisted.map((s) => `${s.kidName} (Age: ${s.kidAge})`).join(", ")}
+          Waitlist: {waitlisted.map((s) => s.kidName).join(", ")}
         </div>
       )}
 
@@ -253,30 +221,13 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
             </button>
           ) : (
             <form onSubmit={submit} className="mt-2 space-y-3 rounded-xl border border-court-navy/10 bg-court-cream/50 p-4">
-              <div className="grid gap-2.5 sm:grid-cols-2">
-                <input
-                  type="text"
-                  placeholder="Parent/guardian name"
-                  value={parentName}
-                  onChange={(e) => setParentName(e.target.value)}
-                  className={`w-full ${inputClass}`}
-                  required
-                />
-                <input
-                  type="tel"
-                  placeholder="Cell phone (for text updates)"
-                  value={parentPhone}
-                  onChange={(e) => setParentPhone(e.target.value)}
-                  className={`w-full ${inputClass}`}
-                  required
-                />
-              </div>
               <input
-                type="email"
-                placeholder="Email (optional)"
-                value={parentEmail}
-                onChange={(e) => setParentEmail(e.target.value)}
+                type="tel"
+                placeholder="Cell phone (for text updates)"
+                value={parentPhone}
+                onChange={(e) => setParentPhone(e.target.value)}
                 className={`w-full ${inputClass}`}
+                required
               />
 
               <div className="space-y-2 border-t border-court-navy/10 pt-3">
@@ -297,27 +248,16 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                         onChange={(e) => updateKid(i, "lastName", e.target.value)}
                         className={`min-w-[7rem] flex-1 ${inputClass}`}
                       />
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          placeholder="Age"
-                          min={0}
-                          max={18}
-                          value={kid.age}
-                          onChange={(e) => updateKid(i, "age", e.target.value)}
-                          className={`w-20 ${inputClass}`}
-                        />
-                        {kids.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeKidRow(i)}
-                            className="px-2 text-sm text-court-navy/30 transition hover:text-red-600"
-                            aria-label="Remove child"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
+                      {kids.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeKidRow(i)}
+                          className="px-2 text-sm text-court-navy/30 transition hover:text-red-600"
+                          aria-label="Remove child"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                     {!kid.nonMember && (
                       <input
@@ -336,15 +276,6 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                         className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
                       />
                       Non-member
-                    </label>
-                    <label className="flex items-center gap-2 px-0.5 py-0.5 text-xs font-medium text-court-navy/70">
-                      <input
-                        type="checkbox"
-                        checked={kid.recurring}
-                        onChange={() => toggleRecurring(i)}
-                        className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
-                      />
-                      🔁 Sign up automatically every week until I cancel
                     </label>
                   </div>
                 ))}

@@ -23,29 +23,15 @@ export async function GET(req: NextRequest) {
   });
   const matches = signups.filter((s) => samePhone(s.parentPhone, phone));
 
-  const recurring = await prisma.recurringSignup.findMany({
-    where: { active: true },
-    include: { template: true },
-  });
-  const recurringMatches = recurring.filter((r) => samePhone(r.parentPhone, phone));
-
   return NextResponse.json({
     signups: matches.map((s) => ({
       id: s.id,
       kidName: s.kidName,
-      kidAge: s.kidAge,
       waitlisted: s.waitlisted,
       cancelled: s.session.status === "CANCELLED",
       lateCancellation: Boolean(s.cancelledAt && s.lateCancellation),
       sessionLabel: `${s.session.template.name} (${formatTime(s.session.template.startTime)})`,
       sessionDate: formatDateShort(s.session.date),
-      recurring: Boolean(s.recurringSignupId),
-    })),
-    recurring: recurringMatches.map((r) => ({
-      id: r.id,
-      kidName: r.kidName,
-      kidAge: r.kidAge,
-      clinicLabel: `${r.template.name} (${formatTime(r.template.startTime)})`,
     })),
   });
 }

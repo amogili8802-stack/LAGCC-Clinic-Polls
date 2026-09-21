@@ -22,7 +22,6 @@ model ClinicTemplate {
   sortOrder   Int      @default(0)
   active      Boolean  @default(true)
   sessions    ClinicSession[]
-  recurringSignups RecurringSignup[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -57,13 +56,11 @@ model Signup {
   id                String           @id @default(cuid())
   sessionId         String
   session           ClinicSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  recurringSignupId String?
-  recurringSignup   RecurringSignup? @relation(fields: [recurringSignupId], references: [id])
-  parentName        String
+  parentName        String? // no longer collected — kept for historical rows
   parentPhone       String
   parentEmail       String?
   kidName           String
-  kidAge            Int
+  kidAge            Int? // no longer collected — kept for historical rows
   memberNumber      String?
   isNonMember       Boolean          @default(false)
   waitlisted        Boolean          @default(false)
@@ -74,30 +71,6 @@ model Signup {
   lateCancellation  Boolean          @default(false)
 
   @@index([sessionId])
-  @@index([parentPhone])
-  @@index([recurringSignupId])
-}
-
-// A standing weekly sign-up: once created, every week's sync (in
-// ensureAndGetWeekSessions) auto-enrolls this kid in that week's session
-// for the matching ClinicTemplate, without the parent doing anything.
-model RecurringSignup {
-  id           String         @id @default(cuid())
-  templateId   String
-  template     ClinicTemplate @relation(fields: [templateId], references: [id])
-  parentName   String
-  parentPhone  String
-  parentEmail  String?
-  kidName      String
-  kidAge       Int
-  memberNumber String?
-  isNonMember  Boolean        @default(false)
-  active       Boolean        @default(true)
-  signups      Signup[]
-  createdAt    DateTime       @default(now())
-  cancelledAt  DateTime?
-
-  @@index([templateId])
   @@index([parentPhone])
 }
 
