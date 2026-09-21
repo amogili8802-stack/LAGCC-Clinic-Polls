@@ -234,12 +234,11 @@ function SessionPanel({ session }: { session: Session }) {
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border p-5 shadow-card ${
+      className={`rounded-2xl border p-5 shadow-card ${
         isCancelled ? "border-red-100 bg-red-50/60" : "border-court-navy/10 bg-white"
       }`}
     >
-      <div className={`absolute inset-y-0 left-0 w-1.5 ${isCancelled ? "bg-red-300" : "bg-court-navy"}`} />
-      <div className="flex flex-wrap items-start justify-between gap-3 pl-2">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-display text-lg font-semibold text-court-navy">{session.template.name}</h3>
           <p className="mt-0.5 text-sm text-court-navy/50">
@@ -251,13 +250,16 @@ function SessionPanel({ session }: { session: Session }) {
           <button
             onClick={() => setShowRoster((v) => !v)}
             disabled={session.signups.length === 0}
-            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full shadow-sm transition disabled:cursor-default disabled:opacity-60 ${
+            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold shadow-sm transition disabled:cursor-default disabled:opacity-60 ${
               belowMinimum
-                ? "bg-black px-5 py-2.5 text-sm font-extrabold text-white hover:bg-black/80"
-                : "bg-court-navy px-3.5 py-1.5 text-xs font-bold text-white hover:bg-court-navyLight"
+                ? "bg-black text-white hover:bg-black/80"
+                : "bg-court-navy text-white hover:bg-court-navyLight"
             }`}
           >
-            {activeSignups.length}/{session.capacity} signed up
+            <span className="text-base font-extrabold">
+              {activeSignups.length}/{session.capacity}
+            </span>{" "}
+            signed up
             {waitlisted.length > 0 && ` · +${waitlisted.length} waitlist`}
             {belowMinimum && ` · below min (${session.minSignups})`}
             {session.signups.length > 0 && (
@@ -292,7 +294,7 @@ function SessionPanel({ session }: { session: Session }) {
       </div>
 
       {isCancelled && (
-        <div className="mt-3 ml-2 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-800">
+        <div className="mt-3 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-800">
           Cancelled by {session.cancelledBy || "a coach"} —{" "}
           {REASONS.find((r) => r.value === session.cancellationReason)?.label || "Other"}
           {session.cancellationNote ? `: ${session.cancellationNote}` : ""}
@@ -300,7 +302,7 @@ function SessionPanel({ session }: { session: Session }) {
       )}
 
       {showCancel && !isCancelled && (
-        <form onSubmit={cancelSession} className="ml-2 mt-3 space-y-2 rounded-xl border border-red-100 bg-red-50/80 p-4">
+        <form onSubmit={cancelSession} className="mt-3 space-y-2 rounded-xl border border-red-100 bg-red-50/80 p-4">
           <p className="text-sm font-medium text-red-900">
             This will text everyone signed up (including the waitlist) that this clinic is cancelled.
           </p>
@@ -341,7 +343,7 @@ function SessionPanel({ session }: { session: Session }) {
         </form>
       )}
 
-      <div className="ml-2 mt-4 flex flex-wrap items-center gap-3 text-xs text-court-navy/60">
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-court-navy/60">
         <span className="flex items-center gap-1.5">
           <label className="font-medium">Min to run:</label>
           <input
@@ -374,7 +376,7 @@ function SessionPanel({ session }: { session: Session }) {
       </div>
 
       {showRoster && session.signups.length > 0 && (
-        <div className="ml-2 mt-4">
+        <div className="mt-4">
           {/* Table layout for sm+ screens */}
           <div className="hidden overflow-hidden rounded-xl border border-court-navy/10 sm:block">
             <table className="w-full text-left text-sm">
@@ -496,7 +498,7 @@ function SessionPanel({ session }: { session: Session }) {
         </div>
       )}
 
-      <div className="ml-2 mt-4">
+      <div className="mt-4">
         {!showAdd ? (
           <button
             onClick={() => setShowAdd(true)}
