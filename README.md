@@ -43,8 +43,14 @@ call from the dashboard; the app never cancels one on its own.
   "Member" or "Non-member," with the sponsor's name shown underneath for any
   non-member entry, so it's clear at a glance who isn't a member and who's
   sponsoring them. Who's signed up is shown prominently on both the public
-  clinic card (bold green "Signed up" pills) and the coach dashboard (bold
-  child names in the roster table).
+  clinic card (bold green "Signed up" pills, collapsible via a dropdown once
+  there are several) and the coach dashboard (bold child names in the roster
+  table). Clicking a signed-up kid's name on the public page opens a quick
+  cancel box right there — enter the phone number it was signed up with and
+  confirm, no need to go through the phone-lookup panel. Cancelling this way
+  follows the same 24-hour policy as the lookup panel below: 24+ hours out it
+  just cancels, less than 24 hours out it's still recorded (and flagged for
+  billing on the coach side) per club policy.
 - **Manage my sign-ups** — a collapsible panel at the top of every week page
   where a parent types the phone number they signed up with to find and
   cancel their own kids' sign-ups, no account or login needed — the same

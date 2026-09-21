@@ -57,12 +57,50 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [success, setSuccess] = useState<string | null>(null);
   const [parentPhone, setParentPhone] = useState("");
   const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
+  const [showRoster, setShowRoster] = useState(true);
+  const [cancelingId, setCancelingId] = useState<string | null>(null);
+  const [cancelPhone, setCancelPhone] = useState("");
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
+  const cancelable = [...activeSignups, ...waitlisted];
   const spotsLeft = Math.max(0, session.capacity - activeSignups.length);
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
+
+  function selectForCancel(id: string) {
+    setCancelingId((prev) => (prev === id ? null : id));
+    setCancelPhone("");
+    setCancelError(null);
+  }
+
+  async function confirmCancel(id: string) {
+    setCancelError(null);
+    if (!cancelPhone.trim()) {
+      setCancelError("Enter the phone number used to sign up.");
+      return;
+    }
+    setCancelSubmitting(true);
+    try {
+      const res = await fetch("/api/signup/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId: id, phone: cancelPhone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCancelError(data.error || "Couldn't cancel. Please try again.");
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setCancelError("Network error. Please try again.");
+    } finally {
+      setCancelSubmitting(false);
+    }
+  }
 
   function updateKid(i: number, field: "firstName" | "lastName" | "sponsorName", value: string) {
     setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, [field]: value } : k)));
@@ -191,38 +229,101 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         </div>
       )}
 
-      {activeSignups.length > 0 && (
+      {cancelable.length > 0 && (
         <div className="mt-3 ml-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-court-greenDark">
+          <button
+            type="button"
+            onClick={() => setShowRoster((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-court-greenDark transition hover:text-court-green"
+          >
             Signed up ({activeSignups.length})
-          </p>
-          <ul className="mt-1.5 flex flex-wrap gap-1.5 text-sm">
-            {activeSignups.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-full border border-court-green/30 bg-court-green/10 px-3 py-1 font-semibold text-court-greenDark"
-              >
-                {s.kidName}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {waitlisted.length > 0 && (
-        <div className="mt-2 ml-2">
-          <p className="text-xs font-bold uppercase tracking-wide text-court-clay">
-            Waitlist ({waitlisted.length})
-          </p>
-          <ul className="mt-1.5 flex flex-wrap gap-1.5 text-sm">
-            {waitlisted.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-full border border-court-clay/40 bg-court-clay/10 px-3 py-1 font-semibold text-court-clay"
-              >
-                {s.kidName}
-              </li>
-            ))}
-          </ul>
+            {waitlisted.length > 0 && ` · +${waitlisted.length} waitlist`}
+            <span className={`transition-transform ${showRoster ? "rotate-180" : ""}`} aria-hidden>
+              ▾
+            </span>
+          </button>
+
+          {showRoster && (
+            <>
+              {activeSignups.length > 0 && (
+                <ul className="mt-1.5 flex flex-wrap gap-1.5 text-sm">
+                  {activeSignups.map((s) => (
+                    <li key={s.id}>
+                      <button
+                        type="button"
+                        onClick={() => selectForCancel(s.id)}
+                        className={`rounded-full border px-3 py-1 font-semibold transition ${
+                          cancelingId === s.id
+                            ? "border-red-300 bg-red-50 text-red-700"
+                            : "border-court-green/30 bg-court-green/10 text-court-greenDark hover:bg-court-green/20"
+                        }`}
+                      >
+                        {s.kidName}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {waitlisted.length > 0 && (
+                <>
+                  <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-court-clay">Waitlist</p>
+                  <ul className="mt-1 flex flex-wrap gap-1.5 text-sm">
+                    {waitlisted.map((s) => (
+                      <li key={s.id}>
+                        <button
+                          type="button"
+                          onClick={() => selectForCancel(s.id)}
+                          className={`rounded-full border px-3 py-1 font-semibold transition ${
+                            cancelingId === s.id
+                              ? "border-red-300 bg-red-50 text-red-700"
+                              : "border-court-clay/40 bg-court-clay/10 text-court-clay hover:bg-court-clay/20"
+                          }`}
+                        >
+                          {s.kidName}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {cancelingId && cancelable.some((s) => s.id === cancelingId) && (
+                <div className="mt-2 max-w-sm rounded-lg border border-red-200 bg-red-50/70 p-3">
+                  <p className="text-sm font-medium text-red-800">
+                    Cancel {cancelable.find((s) => s.id === cancelingId)?.kidName}&apos;s sign-up?
+                  </p>
+                  <p className="mt-0.5 text-xs text-red-700/70">
+                    Cancelling less than 24 hours before the clinic still incurs a charge, per club policy.
+                  </p>
+                  <input
+                    type="tel"
+                    placeholder="Phone number used to sign up"
+                    value={cancelPhone}
+                    onChange={(e) => setCancelPhone(e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+                  />
+                  {cancelError && <p className="mt-1.5 text-xs font-medium text-red-700">{cancelError}</p>}
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => confirmCancel(cancelingId)}
+                      disabled={cancelSubmitting}
+                      className="rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60"
+                    >
+                      {cancelSubmitting ? "Cancelling…" : "Cancel Sign-up"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectForCancel(cancelingId)}
+                      className="rounded-full px-4 py-1.5 text-xs font-medium text-court-navy/50 transition hover:bg-court-navy/5"
+                    >
+                      Never mind
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
