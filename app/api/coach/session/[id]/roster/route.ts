@@ -23,12 +23,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   // cancellations (billable, per club policy) stay on the roster so the
   // CSV can be used for billing paperwork.
   const rows = [
-    ["Child", "Membership", "Phone", "Status"],
+    ["Child", "Membership", "Sponsor", "Phone", "Status"],
     ...session.signups
       .filter((s) => !s.cancelledAt || s.lateCancellation)
       .map((s) => [
         s.kidName,
         s.isNonMember ? "Non-member" : "Member",
+        s.isNonMember ? s.sponsorName || "" : "",
         s.parentPhone,
         s.cancelledAt ? "Cancelled (late — still billed)" : s.waitlisted ? "Waitlist" : "Confirmed",
       ]),

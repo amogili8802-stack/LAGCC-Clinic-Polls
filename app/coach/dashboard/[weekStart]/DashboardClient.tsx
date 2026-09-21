@@ -10,6 +10,7 @@ type Signup = {
   id: string;
   kidName: string;
   isNonMember: boolean;
+  sponsorName: string | null;
   parentPhone: string;
   waitlisted: boolean;
   addedByCoach: boolean;
@@ -389,12 +390,23 @@ function SessionPanel({ session }: { session: Session }) {
                 {[...activeSignups, ...waitlisted].map((s) => (
                   <tr key={s.id} className="border-t border-court-navy/10">
                     <td className="px-3 py-2">
-                      <span className="font-medium text-court-navy/80">{s.kidName}</span>
+                      <span className="font-bold text-court-navy">{s.kidName}</span>
                       {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
                       {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
                     </td>
                     <td className="px-3 py-2 text-court-navy/60">
-                      {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : "Member"}
+                      {s.isNonMember ? (
+                        <span className="font-medium text-court-clay">
+                          Non-member
+                          {s.sponsorName && (
+                            <span className="block text-[11px] font-normal text-court-navy/40">
+                              Sponsor: {s.sponsorName}
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        "Member"
+                      )}
                     </td>
                     <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
                     <td className="px-3 py-2 text-right">
@@ -415,6 +427,9 @@ function SessionPanel({ session }: { session: Session }) {
                     </td>
                     <td className="px-3 py-2 text-red-700/70">
                       {s.isNonMember ? "Non-member" : "Member"}
+                      {s.isNonMember && s.sponsorName && (
+                        <span className="block text-[11px] text-red-700/50">Sponsor: {s.sponsorName}</span>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-red-700/70">{s.parentPhone}</td>
                     <td className="px-3 py-2 text-right">
@@ -437,7 +452,7 @@ function SessionPanel({ session }: { session: Session }) {
             {[...activeSignups, ...waitlisted].map((s) => (
               <div key={s.id} className="rounded-xl border border-court-navy/10 p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-court-navy/80">
+                  <p className="font-bold text-court-navy">
                     {s.kidName}
                     {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
                   </p>
@@ -451,6 +466,9 @@ function SessionPanel({ session }: { session: Session }) {
                 </div>
                 <p className="mt-1 text-court-navy/60">
                   {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : "Member"}
+                  {s.isNonMember && s.sponsorName && (
+                    <span className="ml-1 text-court-navy/40">· Sponsor: {s.sponsorName}</span>
+                  )}
                 </p>
                 <p className="text-court-navy/60">{s.parentPhone}</p>
               </div>
@@ -467,7 +485,10 @@ function SessionPanel({ session }: { session: Session }) {
                     Dismiss
                   </button>
                 </div>
-                <p className="mt-1 text-red-700/70">{s.isNonMember ? "Non-member" : "Member"}</p>
+                <p className="mt-1 text-red-700/70">
+                  {s.isNonMember ? "Non-member" : "Member"}
+                  {s.isNonMember && s.sponsorName && <span className="ml-1">· Sponsor: {s.sponsorName}</span>}
+                </p>
                 <p className="text-red-700/70">{s.parentPhone}</p>
               </div>
             ))}
@@ -502,6 +523,7 @@ function AddWalkInForm({
 }) {
   const [kidName, setKidName] = useState("");
   const [isNonMember, setIsNonMember] = useState(false);
+  const [sponsorName, setSponsorName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -513,6 +535,10 @@ function AddWalkInForm({
       setError("Fill in child name and phone.");
       return;
     }
+    if (isNonMember && !sponsorName.trim()) {
+      setError("Enter the sponsoring member's name.");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/coach/signup", {
@@ -522,6 +548,7 @@ function AddWalkInForm({
           sessionId,
           kidName,
           isNonMember,
+          sponsorName: isNonMember ? sponsorName : undefined,
           parentPhone,
         }),
       });
@@ -549,6 +576,14 @@ function AddWalkInForm({
         />
         Non-member
       </label>
+      {isNonMember && (
+        <input
+          placeholder="Member name (who's sponsoring this guest?)"
+          value={sponsorName}
+          onChange={(e) => setSponsorName(e.target.value)}
+          className={`${inputClass} sm:col-span-2`}
+        />
+      )}
       {error && <p className="text-sm font-medium text-red-600 sm:col-span-2">{error}</p>}
       <div className="flex gap-2 pt-1 sm:col-span-2">
         <button

@@ -6,6 +6,7 @@ import { formatTime } from "@/lib/clinics";
 type Signup = {
   id: string;
   kidName: string;
+  isNonMember: boolean;
   waitlisted: boolean;
   cancelledAt?: string | null;
 };
@@ -46,6 +47,7 @@ type KidRow = {
   firstName: string;
   lastName: string;
   nonMember: boolean;
+  sponsorName: string;
 };
 
 export default function SignupCard({ session, signupOpen }: { session: SessionForCard; signupOpen: boolean }) {
@@ -54,7 +56,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [parentPhone, setParentPhone] = useState("");
-  const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false }]);
+  const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
@@ -62,7 +64,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
 
-  function updateKid(i: number, field: "firstName" | "lastName", value: string) {
+  function updateKid(i: number, field: "firstName" | "lastName" | "sponsorName", value: string) {
     setKids((prev) => prev.map((k, idx) => (idx === i ? { ...k, [field]: value } : k)));
   }
 
@@ -71,7 +73,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   }
 
   function addKidRow() {
-    setKids((prev) => [...prev, { firstName: "", lastName: "", nonMember: false }]);
+    setKids((prev) => [...prev, { firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
   }
 
   function removeKidRow(i: number) {
@@ -88,6 +90,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         firstName: k.firstName.trim(),
         lastName: k.lastName.trim(),
         nonMember: k.nonMember,
+        sponsorName: k.sponsorName.trim(),
       }))
       .filter((k) => k.firstName.length > 0 || k.lastName.length > 0);
 
@@ -103,6 +106,10 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       setError("Enter a first and last name for each child.");
       return;
     }
+    if (cleanedKids.some((k) => k.nonMember && k.sponsorName.length === 0)) {
+      setError("Enter the sponsoring member's name for each non-member child.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -115,6 +122,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
           kids: cleanedKids.map((k) => ({
             name: `${k.firstName} ${k.lastName}`.trim(),
             nonMember: k.nonMember,
+            sponsorName: k.nonMember ? k.sponsorName : undefined,
           })),
         }),
       });
@@ -129,7 +137,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
           : "You're signed up! A confirmation text is on its way."
       );
       setParentPhone("");
-      setKids([{ firstName: "", lastName: "", nonMember: false }]);
+      setKids([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -184,17 +192,37 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       )}
 
       {activeSignups.length > 0 && (
-        <ul className="mt-3 ml-2 flex flex-wrap gap-1.5 text-sm text-court-navy/80">
-          {activeSignups.map((s) => (
-            <li key={s.id} className="rounded-full bg-court-navy/[0.05] px-3 py-1 font-medium">
-              {s.kidName}
-            </li>
-          ))}
-        </ul>
+        <div className="mt-3 ml-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-court-greenDark">
+            Signed up ({activeSignups.length})
+          </p>
+          <ul className="mt-1.5 flex flex-wrap gap-1.5 text-sm">
+            {activeSignups.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-full border border-court-green/30 bg-court-green/10 px-3 py-1 font-semibold text-court-greenDark"
+              >
+                {s.kidName}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {waitlisted.length > 0 && (
-        <div className="mt-2 ml-2 text-xs font-medium text-court-clay">
-          Waitlist: {waitlisted.map((s) => s.kidName).join(", ")}
+        <div className="mt-2 ml-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-court-clay">
+            Waitlist ({waitlisted.length})
+          </p>
+          <ul className="mt-1.5 flex flex-wrap gap-1.5 text-sm">
+            {waitlisted.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-full border border-court-clay/40 bg-court-clay/10 px-3 py-1 font-semibold text-court-clay"
+              >
+                {s.kidName}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -259,6 +287,15 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                       />
                       Non-member
                     </label>
+                    {kid.nonMember && (
+                      <input
+                        type="text"
+                        placeholder="Member name (who's sponsoring this guest?)"
+                        value={kid.sponsorName}
+                        onChange={(e) => updateKid(i, "sponsorName", e.target.value)}
+                        className={`w-full ${inputClass}`}
+                      />
+                    )}
                   </div>
                 ))}
                 <button

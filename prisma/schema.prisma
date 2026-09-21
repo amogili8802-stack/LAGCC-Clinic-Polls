@@ -63,6 +63,7 @@ model Signup {
   kidAge            Int? // no longer collected — kept for historical rows
   memberNumber      String? // no longer collected — kept for historical rows
   isNonMember       Boolean          @default(false)
+  sponsorName       String? // the sponsoring club member's name, for a non-member guest
   waitlisted        Boolean          @default(false)
   addedByCoach      Boolean          @default(false)
   notes             String?

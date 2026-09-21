@@ -7,6 +7,7 @@ type Record = {
   id: string;
   kidName: string;
   memberStatus: string;
+  sponsorName: string | null;
   parentPhone: string;
   clinicLabel: string;
   clinicDate: string;
@@ -70,7 +71,10 @@ export default function BillingClient({ records: initialRecords }: { records: Re
                 {records.map((r) => (
                   <tr key={r.id} className="border-t border-court-navy/10 bg-red-50/40">
                     <td className="px-4 py-3 font-medium text-red-700">{r.kidName}</td>
-                    <td className="px-4 py-3 text-red-700/70">{r.memberStatus}</td>
+                    <td className="px-4 py-3 text-red-700/70">
+                      {r.memberStatus}
+                      {r.sponsorName && <span className="block text-[11px] text-red-700/50">Sponsor: {r.sponsorName}</span>}
+                    </td>
                     <td className="px-4 py-3 text-red-700/70">
                       {r.clinicLabel} — {r.clinicDate}
                     </td>
@@ -104,7 +108,10 @@ export default function BillingClient({ records: initialRecords }: { records: Re
                     {busyId === r.id ? "Clearing…" : "Dismiss"}
                   </button>
                 </div>
-                <p className="mt-1 text-red-700/70">{r.memberStatus}</p>
+                <p className="mt-1 text-red-700/70">
+                  {r.memberStatus}
+                  {r.sponsorName && <span className="ml-1">· Sponsor: {r.sponsorName}</span>}
+                </p>
                 <p className="text-red-700/70">
                   {r.clinicLabel} — {r.clinicDate}
                 </p>

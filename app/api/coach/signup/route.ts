@@ -13,10 +13,16 @@ export async function POST(req: NextRequest) {
   if (!authSession) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const { sessionId, kidName, isNonMember, parentPhone, skipWaitlist } = body || {};
+  const { sessionId, kidName, isNonMember, sponsorName, parentPhone, skipWaitlist } = body || {};
 
   if (!sessionId || !kidName?.trim() || !parentPhone?.trim()) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
+  }
+  if (isNonMember && !sponsorName?.trim()) {
+    return NextResponse.json(
+      { error: "Enter the sponsoring member's name for a non-member sign-up." },
+      { status: 400 }
+    );
   }
 
   const session = await prisma.clinicSession.findUnique({
@@ -34,6 +40,7 @@ export async function POST(req: NextRequest) {
       parentPhone: parentPhone.trim(),
       kidName: kidName.trim(),
       isNonMember: Boolean(isNonMember),
+      sponsorName: isNonMember ? sponsorName?.trim() : null,
       waitlisted,
       addedByCoach: true,
     },

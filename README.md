@@ -36,10 +36,15 @@ call from the dashboard; the app never cancels one on its own.
   time, with prev/next navigation), where anyone can add multiple kids to a
   clinic in one sign-up — a cell phone number (for text updates) and each
   kid's first/last name, no account or password needed — plus a "Non-member"
-  checkbox for a kid who isn't a club member. Coaches have the same checkbox
-  on the walk-in form. Membership status shows up on the coach roster,
-  billing, and CSV export as "Member" or "Non-member," so it's clear at a
-  glance who isn't a member.
+  checkbox for a kid who isn't a club member. Checking it reveals a required
+  "Member name" field naming the club member sponsoring that guest. Coaches
+  have the same checkbox (and sponsor-name field) on the walk-in form.
+  Membership status shows up on the coach roster, billing, and CSV export as
+  "Member" or "Non-member," with the sponsor's name shown underneath for any
+  non-member entry, so it's clear at a glance who isn't a member and who's
+  sponsoring them. Who's signed up is shown prominently on both the public
+  clinic card (bold green "Signed up" pills) and the coach dashboard (bold
+  child names in the roster table).
 - **Manage my sign-ups** — a collapsible panel at the top of every week page
   where a parent types the phone number they signed up with to find and
   cancel their own kids' sign-ups, no account or login needed — the same
