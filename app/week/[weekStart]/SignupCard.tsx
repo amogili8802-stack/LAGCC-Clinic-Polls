@@ -59,7 +59,8 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
   const [showRoster, setShowRoster] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
-  const [cancelPhone, setCancelPhone] = useState("");
+  const [cancelFirstName, setCancelFirstName] = useState("");
+  const [cancelLastName, setCancelLastName] = useState("");
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
 
@@ -72,14 +73,15 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
 
   function selectForCancel(id: string) {
     setCancelingId((prev) => (prev === id ? null : id));
-    setCancelPhone("");
+    setCancelFirstName("");
+    setCancelLastName("");
     setCancelError(null);
   }
 
   async function confirmCancel(id: string) {
     setCancelError(null);
-    if (!cancelPhone.trim()) {
-      setCancelError("Enter the phone number used to sign up.");
+    if (!cancelFirstName.trim() || !cancelLastName.trim()) {
+      setCancelError("Enter the child's first and last name.");
       return;
     }
     setCancelSubmitting(true);
@@ -87,7 +89,11 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       const res = await fetch("/api/signup/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signupId: id, phone: cancelPhone.trim() }),
+        body: JSON.stringify({
+          signupId: id,
+          firstName: cancelFirstName.trim(),
+          lastName: cancelLastName.trim(),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -294,13 +300,22 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                   <p className="mt-0.5 text-xs text-red-700/70">
                     Cancelling less than 24 hours before the clinic still incurs a charge, per club policy.
                   </p>
-                  <input
-                    type="tel"
-                    placeholder="Phone number used to sign up"
-                    value={cancelPhone}
-                    onChange={(e) => setCancelPhone(e.target.value)}
-                    className="mt-2 w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
-                  />
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="First name"
+                      value={cancelFirstName}
+                      onChange={(e) => setCancelFirstName(e.target.value)}
+                      className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Last name"
+                      value={cancelLastName}
+                      onChange={(e) => setCancelLastName(e.target.value)}
+                      className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+                    />
+                  </div>
                   {cancelError && <p className="mt-1.5 text-xs font-medium text-red-700">{cancelError}</p>}
                   <div className="mt-2 flex gap-2">
                     <button
