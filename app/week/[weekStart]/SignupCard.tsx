@@ -363,6 +363,19 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                 className={`w-full ${inputClass}`}
                 required
               />
+              <p className="text-xs leading-relaxed text-court-navy/50">
+                By providing your phone number and signing up, you agree to receive SMS text messages about
+                your clinic sign-up (confirmations, waitlist status, and cancellation notices). Msg &amp; data
+                rates may apply. Msg frequency varies. Reply STOP to opt out, HELP for help. See our{" "}
+                <a href="/privacy" className="underline hover:text-court-navy/70">
+                  Privacy Policy
+                </a>{" "}
+                and{" "}
+                <a href="/terms" className="underline hover:text-court-navy/70">
+                  Terms
+                </a>
+                .
+              </p>
 
               <div className="space-y-2 border-t border-court-navy/10 pt-3">
                 {kids.map((kid, i) => (
