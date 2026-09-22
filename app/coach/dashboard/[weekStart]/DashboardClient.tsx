@@ -145,6 +145,10 @@ function SessionPanel({ session }: { session: Session }) {
   const [showRoster, setShowRoster] = useState(true);
   const [capacity, setCapacity] = useState(session.capacity);
   const [minSignups, setMinSignups] = useState(session.minSignups);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editKidName, setEditKidName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
 
   const activeSignups = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt);
   const waitlisted = session.signups.filter((s) => s.waitlisted && !s.cancelledAt);
@@ -176,6 +180,42 @@ function SessionPanel({ session }: { session: Session }) {
     try {
       await fetch(`/api/coach/signup/${id}`, { method: "DELETE" });
       await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function startEdit(s: Signup) {
+    setEditingId(s.id);
+    setEditKidName(s.kidName);
+    setEditPhone(s.parentPhone);
+    setEditError(null);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditError(null);
+  }
+
+  async function saveEdit(id: string) {
+    setEditError(null);
+    if (!editKidName.trim() || !editPhone.trim()) {
+      setEditError("Name and phone are required.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/coach/signup/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kidName: editKidName.trim(), parentPhone: editPhone.trim() }),
+      });
+      if (res.ok) {
+        await refresh();
+      } else {
+        const data = await res.json();
+        setEditError(data.error || "Failed to save.");
+      }
     } finally {
       setBusy(false);
     }
@@ -385,39 +425,84 @@ function SessionPanel({ session }: { session: Session }) {
                 </tr>
               </thead>
               <tbody>
-                {[...activeSignups, ...waitlisted].map((s) => (
-                  <tr key={s.id} className="border-t border-court-navy/10">
-                    <td className="px-3 py-2">
-                      <span className="font-bold text-court-navy">{s.kidName}</span>
-                      {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
-                      {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
-                    </td>
-                    <td className="px-3 py-2 text-court-navy/60">
-                      {s.isNonMember ? (
-                        <span className="font-medium text-court-clay">
-                          Non-member
-                          {s.sponsorName && (
-                            <span className="block text-[11px] font-normal text-court-navy/40">
-                              Sponsor: {s.sponsorName}
-                            </span>
-                          )}
-                        </span>
-                      ) : (
-                        "Member"
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
-                    <td className="px-3 py-2 text-right">
-                      <button
-                        onClick={() => removeSignup(s.id)}
-                        disabled={busy}
-                        className="font-semibold text-red-600 hover:underline disabled:opacity-40"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {[...activeSignups, ...waitlisted].map((s) =>
+                  editingId === s.id ? (
+                    <tr key={s.id} className="border-t border-court-navy/10 bg-court-navy/[0.03]">
+                      <td className="px-3 py-2" colSpan={2}>
+                        <input
+                          value={editKidName}
+                          onChange={(e) => setEditKidName(e.target.value)}
+                          placeholder="Child name"
+                          className="w-full rounded-lg border border-court-navy/15 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+                        />
+                        {editError && <p className="mt-1 text-xs font-medium text-red-600">{editError}</p>}
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          placeholder="Phone"
+                          className="w-full rounded-lg border border-court-navy/15 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => saveEdit(s.id)}
+                          disabled={busy}
+                          className="font-semibold text-court-green hover:underline disabled:opacity-40"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          disabled={busy}
+                          className="ml-3 font-medium text-court-navy/50 hover:underline disabled:opacity-40"
+                        >
+                          Cancel
+                        </button>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={s.id} className="border-t border-court-navy/10">
+                      <td className="px-3 py-2">
+                        <span className="font-bold text-court-navy">{s.kidName}</span>
+                        {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
+                        {s.addedByCoach && <span className="ml-1.5 text-court-navy/40">· added by coach</span>}
+                      </td>
+                      <td className="px-3 py-2 text-court-navy/60">
+                        {s.isNonMember ? (
+                          <span className="font-medium text-court-clay">
+                            Non-member
+                            {s.sponsorName && (
+                              <span className="block text-[11px] font-normal text-court-navy/40">
+                                Sponsor: {s.sponsorName}
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          "Member"
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-court-navy/60">{s.parentPhone}</td>
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => startEdit(s)}
+                          disabled={busy}
+                          className="font-semibold text-court-navy/60 hover:underline disabled:opacity-40"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => removeSignup(s.id)}
+                          disabled={busy}
+                          className="ml-3 font-semibold text-red-600 hover:underline disabled:opacity-40"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                )}
                 {lateCancelled.map((s) => (
                   <tr key={s.id} className="border-t border-court-navy/10 bg-red-50/60">
                     <td className="px-3 py-2">
@@ -447,30 +532,73 @@ function SessionPanel({ session }: { session: Session }) {
 
           {/* Stacked cards for mobile */}
           <div className="space-y-2 sm:hidden">
-            {[...activeSignups, ...waitlisted].map((s) => (
-              <div key={s.id} className="rounded-xl border border-court-navy/10 p-3 text-sm">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-bold text-court-navy">
-                    {s.kidName}
-                    {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
-                  </p>
-                  <button
-                    onClick={() => removeSignup(s.id)}
-                    disabled={busy}
-                    className="shrink-0 font-semibold text-red-600 hover:underline disabled:opacity-40"
-                  >
-                    Remove
-                  </button>
+            {[...activeSignups, ...waitlisted].map((s) =>
+              editingId === s.id ? (
+                <div key={s.id} className="space-y-2 rounded-xl border border-court-navy/10 bg-court-navy/[0.03] p-3 text-sm">
+                  <input
+                    value={editKidName}
+                    onChange={(e) => setEditKidName(e.target.value)}
+                    placeholder="Child name"
+                    className="w-full rounded-lg border border-court-navy/15 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+                  />
+                  <input
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="Phone"
+                    className="w-full rounded-lg border border-court-navy/15 bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+                  />
+                  {editError && <p className="text-xs font-medium text-red-600">{editError}</p>}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => saveEdit(s.id)}
+                      disabled={busy}
+                      className="font-semibold text-court-green hover:underline disabled:opacity-40"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      disabled={busy}
+                      className="font-medium text-court-navy/50 hover:underline disabled:opacity-40"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <p className="mt-1 text-court-navy/60">
-                  {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : "Member"}
-                  {s.isNonMember && s.sponsorName && (
-                    <span className="ml-1 text-court-navy/40">· Sponsor: {s.sponsorName}</span>
-                  )}
-                </p>
-                <p className="text-court-navy/60">{s.parentPhone}</p>
-              </div>
-            ))}
+              ) : (
+                <div key={s.id} className="rounded-xl border border-court-navy/10 p-3 text-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-bold text-court-navy">
+                      {s.kidName}
+                      {s.waitlisted && <span className="ml-1.5 font-medium text-court-gold">waitlist</span>}
+                    </p>
+                    <div className="flex shrink-0 gap-3">
+                      <button
+                        onClick={() => startEdit(s)}
+                        disabled={busy}
+                        className="font-semibold text-court-navy/60 hover:underline disabled:opacity-40"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => removeSignup(s.id)}
+                        disabled={busy}
+                        className="font-semibold text-red-600 hover:underline disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-court-navy/60">
+                    {s.isNonMember ? <span className="font-medium text-court-clay">Non-member</span> : "Member"}
+                    {s.isNonMember && s.sponsorName && (
+                      <span className="ml-1 text-court-navy/40">· Sponsor: {s.sponsorName}</span>
+                    )}
+                  </p>
+                  <p className="text-court-navy/60">{s.parentPhone}</p>
+                </div>
+              )
+            )}
             {lateCancelled.map((s) => (
               <div key={s.id} className="rounded-xl border border-court-navy/10 bg-red-50/60 p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">

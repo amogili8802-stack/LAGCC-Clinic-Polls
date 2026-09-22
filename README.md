@@ -110,8 +110,10 @@ call from the dashboard; the app never cancels one on its own.
   (collapsed by default is never forced — it starts open) so it's easy to
   scan who's signed up and how many at a glance, plus a running total for
   the whole week shown right under "Signed in as [coach]". From there: add
-  a walk-in/phone sign-up, remove a kid, edit a clinic's minimum and
-  maximum, export a roster as CSV, and cancel or reopen a clinic.
+  a walk-in/phone sign-up, edit a signed-up kid's name or phone number in
+  place (fixing a typo doesn't require removing and re-adding them), remove
+  a kid, edit a clinic's minimum and maximum, export a roster as CSV, and
+  cancel or reopen a clinic.
 - **Billing** (`/coach/billing`) — every late cancellation across every week,
   in one list, instead of having to click through each week's dashboard to
   find the red flags. A "Dismiss" button clears a row once it's been billed.
