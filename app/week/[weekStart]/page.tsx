@@ -11,6 +11,7 @@ import {
   isWeekOpenForSignup,
   formatOpensAt,
   isSignupOpenForSession,
+  isSessionOver,
 } from "@/lib/weeks";
 import SignupCard from "./SignupCard";
 import LookupPanel from "./LookupPanel";
@@ -27,7 +28,8 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
   }
 
   const isOpen = isWeekOpenForSignup(weekStart);
-  const sessions = isOpen ? await ensureAndGetWeekSessions(weekStart) : [];
+  const allSessions = isOpen ? await ensureAndGetWeekSessions(weekStart) : [];
+  const sessions = allSessions.filter((s) => !isSessionOver(s.date, s.template.endTime));
   const prevWeek = formatWeekParam(addDays(weekStart, -7));
   const nextWeek = formatWeekParam(addDays(weekStart, 7));
   const isCurrentWeek = weekStart.getTime() === mondayOf(todayUTC()).getTime();
@@ -81,10 +83,21 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
             Check back then!
           </p>
         </div>
-      ) : sessions.length === 0 ? (
+      ) : allSessions.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-court-navy/20 bg-white/60 py-10 text-center text-court-navy/50">
           No clinics are configured yet. A coach needs to run the setup/seed step.
         </p>
+      ) : sessions.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-court-navy/20 bg-white/60 py-12 text-center">
+          <p className="font-display text-lg font-semibold text-court-navy">That's a wrap for this week</p>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-court-navy/60">
+            All of this week&apos;s clinics have already happened.{" "}
+            <Link href={`/week/${nextWeek}`} className="font-semibold text-court-green hover:underline">
+              Check next week
+            </Link>
+            .
+          </p>
+        </div>
       ) : (
         <div className="space-y-8">
           {Array.from(byDate.entries()).map(([dateKey, daySessions]) => (

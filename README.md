@@ -67,6 +67,14 @@ call from the dashboard; the app never cancels one on its own.
   aren't affected — the dashboard always shows every week. Enforced both on
   the page and in the sign-up API, so it can't be bypassed by hitting the
   API directly.
+- **Finished clinics drop off the public page** — once a clinic's end time
+  has passed, it's no longer shown on the public week view, so parents
+  scrolling the current week land on what's still ahead instead of
+  scrolling past ones that already happened. If every clinic in a week is
+  done, the page shows a "that's a wrap" message with a link to next week
+  instead of an empty list. The coach dashboard is unaffected — it always
+  shows the full week, past clinics included, since coaches still need
+  those for billing and rosters.
 - **Waitlisting** once a clinic hits capacity.
 - **Nightly 8pm sign-up cutoff** — each clinic stops accepting new public
   sign-ups at 8:00pm (club-local time) the night before it runs, shown as a

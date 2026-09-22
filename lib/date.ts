@@ -220,3 +220,14 @@ export function isLateCancellation(sessionDate: Date, startTime: string, now: Da
   const start = sessionStartAt(sessionDate, startTime);
   return now.getTime() > start.getTime() - 24 * 60 * 60 * 1000;
 }
+
+// The actual club-local moment a clinic ends — used to drop finished
+// clinics from the public week view once they're over, so parents scrolling
+// the current week only see ones still ahead of them.
+export function sessionEndAt(sessionDate: Date, endTime: string): Date {
+  return sessionStartAt(sessionDate, endTime);
+}
+
+export function isSessionOver(sessionDate: Date, endTime: string, now: Date = new Date()): boolean {
+  return now.getTime() >= sessionEndAt(sessionDate, endTime).getTime();
+}
