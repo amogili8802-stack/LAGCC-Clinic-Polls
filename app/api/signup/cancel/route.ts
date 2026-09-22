@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { samePhone } from "@/lib/phone";
 import { isLateCancellation } from "@/lib/date";
+import { notifyCoaches } from "@/lib/notifyCoaches";
+import { formatDateLong } from "@/lib/weeks";
+import { formatTime } from "@/lib/clinics";
+
+const clubName = process.env.CLUB_NAME || "The club";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -48,6 +53,12 @@ export async function POST(req: NextRequest) {
       await prisma.signup.update({ where: { id: nextInLine.id }, data: { waitlisted: false } });
     }
   }
+
+  const dateLabel = formatDateLong(signup.session.date);
+  const timeLabel = `${formatTime(signup.session.template.startTime)}-${formatTime(signup.session.template.endTime)}`;
+  let coachBody = `${clubName} Tennis: ${signup.kidName} cancelled their sign-up for ${signup.session.template.name} on ${dateLabel}, ${timeLabel}.`;
+  if (lateCancellation) coachBody += " Less than 24 hours out — still billed per club policy.";
+  await notifyCoaches(coachBody);
 
   return NextResponse.json({ success: true, lateCancellation });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
+import { notifyCoaches } from "@/lib/notifyCoaches";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
 import {
@@ -96,6 +97,12 @@ export async function POST(req: NextRequest) {
   smsBody += "Reply to the pro shop with any questions.";
 
   await sendSms(toE164(parentPhone), smsBody);
+
+  const allNames = [...confirmedNames, ...waitlistedNames];
+  let coachBody = `${clubName} Tennis: ${allNames.join(", ")} signed up for ${session.template.name} on ${dateLabel}, ${timeLabel}`;
+  if (waitlistedNames.length > 0) coachBody += ` (${waitlistedNames.length} on waitlist)`;
+  coachBody += ".";
+  await notifyCoaches(coachBody);
 
   return NextResponse.json({
     success: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCoachSession } from "@/lib/coachAuth";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
+import { notifyCoaches } from "@/lib/notifyCoaches";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
 import { formatDateLong } from "@/lib/weeks";
@@ -52,6 +53,11 @@ export async function POST(req: NextRequest) {
     ? `${clubName} Tennis: ${kidName} added to the WAITLIST for ${session.template.name} on ${dateLabel} (${timeLabel}).`
     : `${clubName} Tennis: ${kidName} confirmed for ${session.template.name} on ${dateLabel} (${timeLabel}).`;
   await sendSms(toE164(parentPhone), smsBody);
+
+  const coachBody = waitlisted
+    ? `${clubName} Tennis: ${kidName} added to the WAITLIST for ${session.template.name} on ${dateLabel} (${timeLabel}) — walk-in.`
+    : `${clubName} Tennis: ${kidName} signed up for ${session.template.name} on ${dateLabel} (${timeLabel}) — walk-in.`;
+  await notifyCoaches(coachBody);
 
   return NextResponse.json({ success: true, signup });
 }

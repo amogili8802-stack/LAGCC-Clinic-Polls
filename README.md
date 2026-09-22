@@ -122,6 +122,10 @@ call from the dashboard; the app never cancels one on its own.
   - Cancellation text to every parent signed up (including the waitlist)
     and every coach with a phone number on file, the moment a coach cancels
     a clinic, naming the reason.
+  - Every coach with a phone number on file also gets a short text whenever
+    anyone signs up (public sign-up or a coach walk-in) or self-cancels
+    (via the public page or "Manage my sign-ups"), so coaches don't have to
+    keep the dashboard open to stay current.
   - If Twilio isn't configured, messages are logged to the server console
     instead of failing, so everything else still works in development.
 
