@@ -53,12 +53,12 @@ call from the dashboard; the app never cancels one on its own.
   below: 24+ hours out it just cancels, less than 24 hours out it's still
   recorded (and flagged for billing on the coach side) per club policy.
 - **Manage my sign-ups** — a collapsible panel at the top of every week page
-  where a parent types the phone number they signed up with to find and
-  cancel their own kids' sign-ups, no account or login needed — the same
-  phone number is all that identifies a sign-up as theirs. A clinic they
-  cancelled within 24 hours stays visible in the results (rather than
-  disappearing) until its date passes, flagged in red with "— cancelled less
-  than 24 hours" and a note that it's still billed — mirroring how the
+  where a parent finds and cancels their own kids' sign-ups, no account or
+  login needed, by searching either the phone number they signed up with or
+  the child's first and last name (a toggle switches between the two). A
+  clinic they cancelled within 24 hours stays visible in the results (rather
+  than disappearing) until its date passes, flagged in red with "— cancelled
+  less than 24 hours" and a note that it's still billed — mirroring how the
   coach's own roster flags it.
 - **Rolling weekly release** — a week only opens for public sign-up at
   10:00am (club-local time, `CLUB_TIMEZONE`) on the Thursday of the week

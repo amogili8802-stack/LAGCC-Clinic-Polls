@@ -14,18 +14,39 @@ type MySignup = {
 
 export default function LookupPanel() {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"phone" | "name">("phone");
   const [phone, setPhone] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<MySignup[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  function switchMode(next: "phone" | "name") {
+    setMode(next);
+    setError(null);
+    setResults(null);
+  }
+
+  function lookupParams() {
+    return mode === "phone"
+      ? `phone=${encodeURIComponent(phone.trim())}`
+      : `firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(lastName.trim())}`;
+  }
+
+  function cancelBody(id: string) {
+    return mode === "phone"
+      ? { signupId: id, phone: phone.trim() }
+      : { signupId: id, firstName: firstName.trim(), lastName: lastName.trim() };
+  }
 
   async function lookup(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/signup/lookup?phone=${encodeURIComponent(phone.trim())}`);
+      const res = await fetch(`/api/signup/lookup?${lookupParams()}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Couldn't look that up.");
@@ -46,7 +67,7 @@ export default function LookupPanel() {
       const res = await fetch("/api/signup/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signupId: id, phone: phone.trim() }),
+        body: JSON.stringify(cancelBody(id)),
       });
       if (res.ok) {
         const data = await res.json();
@@ -69,7 +90,7 @@ export default function LookupPanel() {
       >
         <span className="flex items-center gap-2">
           <span aria-hidden className="text-court-gold">✦</span> Manage my sign-ups
-          <span className="hidden font-normal text-court-navy/40 sm:inline">— cancel or view by phone number</span>
+          <span className="hidden font-normal text-court-navy/40 sm:inline">— cancel or view by phone number or name</span>
         </span>
         <span className={`text-court-navy/40 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden>
           ▾
@@ -77,19 +98,56 @@ export default function LookupPanel() {
       </button>
       {open && (
         <div className="space-y-3 border-t border-court-navy/10 bg-court-cream/50 p-4 text-sm">
+          <div className="flex gap-3 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => switchMode("phone")}
+              className={mode === "phone" ? "text-court-navy underline" : "text-court-navy/40 hover:text-court-navy/70"}
+            >
+              Search by phone
+            </button>
+            <button
+              type="button"
+              onClick={() => switchMode("name")}
+              className={mode === "name" ? "text-court-navy underline" : "text-court-navy/40 hover:text-court-navy/70"}
+            >
+              Search by child&apos;s name
+            </button>
+          </div>
           <form onSubmit={lookup} className="flex gap-2">
-            <input
-              type="tel"
-              placeholder="Phone number used at sign-up"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="flex-1 rounded-lg border border-court-navy/15 bg-white px-3.5 py-2.5 shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
-              required
-            />
+            {mode === "phone" ? (
+              <input
+                type="tel"
+                placeholder="Phone number used at sign-up"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="flex-1 rounded-lg border border-court-navy/15 bg-white px-3.5 py-2.5 shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+                required
+              />
+            ) : (
+              <>
+                <input
+                  type="text"
+                  placeholder="First name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="min-w-0 flex-1 rounded-lg border border-court-navy/15 bg-white px-3.5 py-2.5 shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Last name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="min-w-0 flex-1 rounded-lg border border-court-navy/15 bg-white px-3.5 py-2.5 shadow-sm transition focus:border-court-navy focus:outline-none focus:ring-2 focus:ring-court-navy/15"
+                  required
+                />
+              </>
+            )}
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-court-navy px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-court-navyLight disabled:opacity-60"
+              className="shrink-0 rounded-lg bg-court-navy px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-court-navyLight disabled:opacity-60"
             >
               {loading ? "Looking…" : "Find"}
             </button>
@@ -97,7 +155,9 @@ export default function LookupPanel() {
           {error && <p className="font-medium text-red-600">{error}</p>}
 
           {results && results.length === 0 && (
-            <p className="text-court-navy/50">No upcoming sign-ups found for that number.</p>
+            <p className="text-court-navy/50">
+              No upcoming sign-ups found for that {mode === "phone" ? "number" : "name"}.
+            </p>
           )}
           {results && results.length > 0 && (
             <ul className="space-y-2">
