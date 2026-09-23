@@ -104,7 +104,7 @@ export default function LookupPanel() {
               onClick={() => switchMode("phone")}
               className={`flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold shadow-sm transition ${
                 mode === "phone"
-                  ? "border-court-navy bg-court-navy text-white"
+                  ? "border-court-green bg-court-green text-white"
                   : "border-court-navy/15 bg-white text-court-navy/60 hover:border-court-navy/30 hover:bg-court-navy/[0.03]"
               }`}
             >
@@ -115,7 +115,7 @@ export default function LookupPanel() {
               onClick={() => switchMode("name")}
               className={`flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold shadow-sm transition ${
                 mode === "name"
-                  ? "border-court-navy bg-court-navy text-white"
+                  ? "border-court-green bg-court-green text-white"
                   : "border-court-navy/15 bg-white text-court-navy/60 hover:border-court-navy/30 hover:bg-court-navy/[0.03]"
               }`}
             >
