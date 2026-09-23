@@ -35,14 +35,6 @@ const REASON_LABELS: Record<string, string> = {
   OTHER: "Cancelled",
 };
 
-// The auto-cancel note includes the exact head count ("...; had 0.") for
-// coaches' benefit on the dashboard — parents just need to know a minimum
-// wasn't met, not how many kids were actually signed up.
-function parentFacingNote(note: string | null | undefined): string {
-  if (!note) return "";
-  return note.replace(/;\s*had \d+\.?$/, ".");
-}
-
 type KidRow = {
   firstName: string;
   lastName: string;
@@ -225,7 +217,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       {isCancelled && (
         <div className="mt-3 rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-800">
           Cancelled — {REASON_LABELS[session.cancellationReason || "OTHER"]}
-          {session.cancellationNote ? `: ${parentFacingNote(session.cancellationNote)}` : ""}
+          {session.cancellationNote ? `: ${session.cancellationNote}` : ""}
         </div>
       )}
       {!isCancelled && !signupOpen && (

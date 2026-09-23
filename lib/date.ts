@@ -160,10 +160,8 @@ export function formatOpensAt(weekStart: Date): string {
 }
 
 // New sign-ups for a given clinic session close at 8:00pm club-local time
-// the night before it runs. This is independent of the auto-cancellation
-// cron (which fires around the same time to cancel under-minimum
-// sessions) — a session that already has enough sign-ups by 8pm simply
-// stops accepting more, without being cancelled.
+// the night before it runs. A coach can still add a walk-in after this
+// point from the dashboard; only public sign-ups are affected.
 export function signupCutoffFor(sessionDate: Date): Date {
   const nightBefore = addDays(sessionDate, -1);
   return zonedWallTimeToUTC(
