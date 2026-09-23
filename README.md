@@ -83,12 +83,12 @@ call from the dashboard; the app never cancels one on its own.
   cutoff from the dashboard.
 - **Manual cancellation only** — every clinic has a minimum (default 4) and
   maximum (default 8), both coach-editable per session, purely as a
-  reference: the "signed up" badge on the coach dashboard turns gold and
-  reads "below min" once a clinic is short of its minimum (late
-  cancellations still count toward it, since they're still billed), so a
-  coach can see at a glance which clinics might be worth cancelling — but
-  nothing ever cancels a clinic automatically. A coach always makes that
-  call themselves from **Cancel Clinic** on the dashboard.
+  reference: the "signed up" badge on the coach dashboard reads "below min"
+  once a clinic is short of its minimum (late cancellations still count
+  toward it, since they're still billed), so a coach can see at a glance
+  which clinics might be worth cancelling — but nothing ever cancels a
+  clinic automatically. A coach always makes that call themselves from
+  **Cancel Clinic** on the dashboard.
 - **Late-cancellation tracking (24-hour policy)** — per club policy, cancelling
   a sign-up less than 24 hours before the clinic's start time still incurs a
   charge. A self-serve cancellation made 24+ hours ahead simply removes the
@@ -129,13 +129,15 @@ call from the dashboard; the app never cancels one on its own.
   (with an optional free-text note) — chosen when a coach cancels a clinic.
 - **Text message notifications** via Twilio:
   - Confirmation text when a parent signs up (or is added by a coach).
+  - Confirmation text to the parent when they self-cancel a sign-up (via the
+    public page or "Manage my sign-ups"), noting when it's within 24 hours
+    and still billed.
   - Cancellation text to every parent signed up (including the waitlist)
     and every coach with a phone number on file, the moment a coach cancels
     a clinic, naming the reason.
   - Every coach with a phone number on file also gets a short text whenever
-    anyone signs up (public sign-up or a coach walk-in) or self-cancels
-    (via the public page or "Manage my sign-ups"), so coaches don't have to
-    keep the dashboard open to stay current.
+    anyone signs up (public sign-up or a coach walk-in) or self-cancels, so
+    coaches don't have to keep the dashboard open to stay current.
   - If Twilio isn't configured, messages are logged to the server console
     instead of failing, so everything else still works in development.
 

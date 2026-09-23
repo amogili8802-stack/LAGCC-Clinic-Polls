@@ -10,3 +10,6 @@ prisma/dev.db
 prisma/dev.db-journal
 .DS_Store
 npm-debug.log*
+
+# Build artifact from ad-hoc tsc runs (not produced by next build)
+*.tsbuildinfo
