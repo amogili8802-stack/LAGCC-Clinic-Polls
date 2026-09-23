@@ -98,18 +98,26 @@ export default function LookupPanel() {
       </button>
       {open && (
         <div className="space-y-3 border-t border-court-navy/10 bg-court-cream/50 p-4 text-sm">
-          <div className="flex gap-3 text-xs font-semibold">
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => switchMode("phone")}
-              className={mode === "phone" ? "text-court-navy underline" : "text-court-navy/40 hover:text-court-navy/70"}
+              className={`flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold shadow-sm transition ${
+                mode === "phone"
+                  ? "border-court-navy bg-court-navy text-white"
+                  : "border-court-navy/15 bg-white text-court-navy/60 hover:border-court-navy/30 hover:bg-court-navy/[0.03]"
+              }`}
             >
               Search by phone
             </button>
             <button
               type="button"
               onClick={() => switchMode("name")}
-              className={mode === "name" ? "text-court-navy underline" : "text-court-navy/40 hover:text-court-navy/70"}
+              className={`flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold shadow-sm transition ${
+                mode === "name"
+                  ? "border-court-navy bg-court-navy text-white"
+                  : "border-court-navy/15 bg-white text-court-navy/60 hover:border-court-navy/30 hover:bg-court-navy/[0.03]"
+              }`}
             >
               Search by child&apos;s name
             </button>
