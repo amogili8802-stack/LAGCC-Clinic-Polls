@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatTime } from "@/lib/clinics";
+import { formatDateShort, addDays } from "@/lib/date";
 
 type Signup = {
   id: string;
@@ -64,6 +65,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const spotsLeft = Math.max(0, session.capacity - activeSignups.length);
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
+  const nextWeekDate = addDays(new Date(session.date), 7);
 
   function selectForCancel(id: string) {
     setCancelingId((prev) => (prev === id ? null : id));
@@ -178,7 +180,9 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         data.waitlistedCount > 0
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
           : "You're signed up!";
-      setSuccess(data.repeatedNextWeek ? `${base} You're also signed up for next week.` : base);
+      setSuccess(
+        data.repeatedNextWeek ? `${base} You're also signed up for ${formatDateShort(nextWeekDate)}.` : base
+      );
       setParentPhone("");
       setKids([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
       setRepeatNextWeek(false);
@@ -447,14 +451,20 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                   </span>
                 </button>
                 {showRecurring && (
-                  <label className="mt-1.5 flex items-center gap-2 rounded-lg border border-court-navy/10 bg-white p-2.5 text-xs font-medium text-court-navy/70">
+                  <label className="mt-1.5 flex items-start gap-2 rounded-lg border border-court-navy/10 bg-white p-2.5 text-xs font-medium text-court-navy/70">
                     <input
                       type="checkbox"
                       checked={repeatNextWeek}
                       onChange={(e) => setRepeatNextWeek(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
                     />
-                    Repeat next week too (up to 2 kids)
+                    <span>
+                      Sign up for both days below (up to 2 kids)
+                      <span className="mt-1 flex flex-col gap-0.5 font-semibold text-court-navy">
+                        <span>{formatDateShort(new Date(session.date))}</span>
+                        <span>{formatDateShort(nextWeekDate)}</span>
+                      </span>
+                    </span>
                   </label>
                 )}
               </div>
