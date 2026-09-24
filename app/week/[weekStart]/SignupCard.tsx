@@ -50,6 +50,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [parentPhone, setParentPhone] = useState("");
   const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
   const [repeatNextWeek, setRepeatNextWeek] = useState(false);
+  const [showRecurring, setShowRecurring] = useState(false);
   const [showRoster, setShowRoster] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
   const [cancelFirstName, setCancelFirstName] = useState("");
@@ -145,6 +146,10 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
     }
     if (cleanedKids.some((k) => k.nonMember && k.sponsorName.length === 0)) {
       setError("Enter the sponsoring member's name for each non-member child.");
+      return;
+    }
+    if (repeatNextWeek && cleanedKids.length > 2) {
+      setError("Recurring sign-up is limited to 2 kids.");
       return;
     }
 
@@ -430,21 +435,29 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                 </button>
               </div>
 
-              <label className="flex items-start gap-2 rounded-lg border border-court-navy/10 bg-white p-2.5 text-xs font-medium text-court-navy/70">
-                <input
-                  type="checkbox"
-                  checked={repeatNextWeek}
-                  onChange={(e) => setRepeatNextWeek(e.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
-                />
-                <span>
-                  Also sign up for next week (same day &amp; time)
-                  <span className="block font-normal text-court-navy/40">
-                    Limited to this week + next week, so everyone gets a fair turn — you&apos;ll need to sign up
-                    again after that.
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowRecurring((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-lg border border-court-navy/10 bg-white px-2.5 py-2 text-xs font-semibold text-court-navy/70 transition hover:bg-court-navy/[0.03]"
+                >
+                  Recurring
+                  <span className={`transition-transform ${showRecurring ? "rotate-180" : ""}`} aria-hidden>
+                    ▾
                   </span>
-                </span>
-              </label>
+                </button>
+                {showRecurring && (
+                  <label className="mt-1.5 flex items-center gap-2 rounded-lg border border-court-navy/10 bg-white p-2.5 text-xs font-medium text-court-navy/70">
+                    <input
+                      type="checkbox"
+                      checked={repeatNextWeek}
+                      onChange={(e) => setRepeatNextWeek(e.target.checked)}
+                      className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                    />
+                    Repeat next week too (up to 2 kids)
+                  </label>
+                )}
+              </div>
 
               {error && <p className="text-sm font-medium text-red-600">{error}</p>}
               {success && <p className="text-sm font-medium text-court-greenDark">{success}</p>}

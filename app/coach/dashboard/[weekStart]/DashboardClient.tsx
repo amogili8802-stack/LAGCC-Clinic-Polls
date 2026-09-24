@@ -719,7 +719,7 @@ function AddWalkInForm({
           onChange={(e) => setRepeatNextWeek(e.target.checked)}
           className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
         />
-        Also sign up for next week (same day &amp; time, this week + next only)
+        Repeat next week too
       </label>
       {error && <p className="text-sm font-medium text-red-600 sm:col-span-2">{error}</p>}
       <div className="flex gap-2 pt-1 sm:col-span-2">
