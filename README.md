@@ -84,13 +84,12 @@ call from the dashboard; the app never cancels one on its own.
   Thursday's ages 3-6 clinics), so a parent can set up recurring sign-ups
   for all of them in one go instead of repeating the whole form per day.
   Each checked day gets its own independent this-week + next-week pair of
-  sign-ups (auto-creating next week's session if needed) — capped at 2
-  clinic days per week total (checkboxes past that are disabled, and the
-  API rejects a request that exceeds it too; no limit on how many kids can
-  be in the sign-up), no open-ended recurring series like the app used to
-  have, so a family can't hold a spot indefinitely and other families still
-  get a turn. Every day is fully independent: cancelling one doesn't touch
-  any other, each gets its own confirmation text and its own
+  sign-ups (auto-creating next week's session if needed) — no cap on how
+  many days or kids can be included, just the 2-week limit per day itself
+  (no open-ended recurring series like the app used to have, so a family
+  can't hold any one clinic's spot indefinitely and other families still
+  get a turn at it). Every day is fully independent: cancelling one doesn't
+  touch any other, each gets its own confirmation text and its own
   waitlist/capacity check, and a family that already has a recurring
   sign-up for a given day just has that one skipped (not an error) if they
   check it again while adding others.

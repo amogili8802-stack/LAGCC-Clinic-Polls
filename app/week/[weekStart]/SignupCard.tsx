@@ -96,19 +96,8 @@ export default function SignupCard({
     )
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const recurringDaysSelected = (repeatNextWeek ? 1 : 0) + otherDayIds.length;
-
   function toggleOtherDay(id: string) {
-    setOtherDayIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (recurringDaysSelected >= 2) return prev;
-      return [...prev, id];
-    });
-  }
-
-  function toggleThisClinic(checked: boolean) {
-    if (checked && recurringDaysSelected >= 2) return;
-    setRepeatNextWeek(checked);
+    setOtherDayIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   function selectForCancel(id: string) {
@@ -494,14 +483,13 @@ export default function SignupCard({
                 </button>
                 {showRecurring && (
                   <div className="mt-1.5 space-y-1.5 rounded-lg border border-court-navy/10 bg-white p-2.5">
-                    <p className="text-xs text-court-navy/50">2 weeks, up to 2 days per week.</p>
+                    <p className="text-xs text-court-navy/50">Sign up for recurring for 2 weeks.</p>
                     <label className="flex items-start gap-2 text-xs font-medium text-court-navy/70">
                       <input
                         type="checkbox"
                         checked={repeatNextWeek}
-                        onChange={(e) => toggleThisClinic(e.target.checked)}
-                        disabled={!repeatNextWeek && recurringDaysSelected >= 2}
-                        className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30 disabled:opacity-40"
+                        onChange={(e) => setRepeatNextWeek(e.target.checked)}
+                        className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
                       />
                       <span>
                         This clinic
@@ -524,8 +512,7 @@ export default function SignupCard({
                               type="checkbox"
                               checked={checked}
                               onChange={() => toggleOtherDay(d.id)}
-                              disabled={!checked && recurringDaysSelected >= 2}
-                              className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30 disabled:opacity-40"
+                              className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
                             />
                             <span>
                               {d.template.name}
