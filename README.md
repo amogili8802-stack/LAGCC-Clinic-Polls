@@ -76,6 +76,15 @@ call from the dashboard; the app never cancels one on its own.
   shows the full week, past clinics included, since coaches still need
   those for billing and rosters.
 - **Waitlisting** once a clinic hits capacity.
+- **Optional 2-week repeat sign-up** — a "Also sign up for next week (same
+  day & time)" checkbox on both the public sign-up form and the coach
+  walk-in form creates a second, independent sign-up for the same clinic
+  slot exactly one week later (auto-creating that session if it doesn't
+  exist yet), capped at this week + next week only — no open-ended
+  recurring series like the app used to have, so a family can't hold a spot
+  indefinitely and other families still get a turn. The two weeks are
+  otherwise unrelated: cancelling one doesn't touch the other, and each
+  gets its own confirmation text and its own waitlist/capacity check.
 - **Nightly 8pm sign-up cutoff** — each clinic stops accepting new public
   sign-ups at 8:00pm (club-local time) the night before it runs, shown as a
   "Sign-ups closed" badge in place of the Sign Up button. Enforced on the

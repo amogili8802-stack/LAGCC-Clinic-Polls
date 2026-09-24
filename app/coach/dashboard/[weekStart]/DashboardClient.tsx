@@ -651,6 +651,7 @@ function AddWalkInForm({
   const [isNonMember, setIsNonMember] = useState(false);
   const [sponsorName, setSponsorName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
+  const [repeatNextWeek, setRepeatNextWeek] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -676,6 +677,7 @@ function AddWalkInForm({
           isNonMember,
           sponsorName: isNonMember ? sponsorName : undefined,
           parentPhone,
+          repeatNextWeek,
         }),
       });
       if (res.ok) {
@@ -710,6 +712,15 @@ function AddWalkInForm({
           className={`${inputClass} sm:col-span-2`}
         />
       )}
+      <label className="flex items-center gap-2 text-xs font-medium text-court-navy/70 sm:col-span-2">
+        <input
+          type="checkbox"
+          checked={repeatNextWeek}
+          onChange={(e) => setRepeatNextWeek(e.target.checked)}
+          className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+        />
+        Also sign up for next week (same day &amp; time, this week + next only)
+      </label>
       {error && <p className="text-sm font-medium text-red-600 sm:col-span-2">{error}</p>}
       <div className="flex gap-2 pt-1 sm:col-span-2">
         <button

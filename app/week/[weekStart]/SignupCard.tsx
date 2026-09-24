@@ -49,6 +49,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [success, setSuccess] = useState<string | null>(null);
   const [parentPhone, setParentPhone] = useState("");
   const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
+  const [repeatNextWeek, setRepeatNextWeek] = useState(false);
   const [showRoster, setShowRoster] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
   const [cancelFirstName, setCancelFirstName] = useState("");
@@ -160,6 +161,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
             nonMember: k.nonMember,
             sponsorName: k.nonMember ? k.sponsorName : undefined,
           })),
+          repeatNextWeek,
         }),
       });
       const data = await res.json();
@@ -167,13 +169,14 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         setError(data.error || "Something went wrong. Please try again.");
         return;
       }
-      setSuccess(
+      const base =
         data.waitlistedCount > 0
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
-          : "You're signed up! A confirmation text is on its way."
-      );
+          : "You're signed up!";
+      setSuccess(data.repeatedNextWeek ? `${base} You're also signed up for next week.` : base);
       setParentPhone("");
       setKids([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
+      setRepeatNextWeek(false);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -426,6 +429,22 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                   + Add another child
                 </button>
               </div>
+
+              <label className="flex items-start gap-2 rounded-lg border border-court-navy/10 bg-white p-2.5 text-xs font-medium text-court-navy/70">
+                <input
+                  type="checkbox"
+                  checked={repeatNextWeek}
+                  onChange={(e) => setRepeatNextWeek(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                />
+                <span>
+                  Also sign up for next week (same day &amp; time)
+                  <span className="block font-normal text-court-navy/40">
+                    Limited to this week + next week, so everyone gets a fair turn — you&apos;ll need to sign up
+                    again after that.
+                  </span>
+                </span>
+              </label>
 
               {error && <p className="text-sm font-medium text-red-600">{error}</p>}
               {success && <p className="text-sm font-medium text-court-greenDark">{success}</p>}

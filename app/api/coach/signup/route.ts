@@ -5,16 +5,58 @@ import { sendSms } from "@/lib/sms";
 import { notifyCoaches } from "@/lib/notifyCoaches";
 import { toE164 } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
-import { formatDateLong } from "@/lib/weeks";
+import { formatDateLong, addDays } from "@/lib/weeks";
+import type { ClinicSession, ClinicTemplate } from "@prisma/client";
 
 const clubName = process.env.CLUB_NAME || "The club";
+
+async function addWalkIn(
+  targetSession: ClinicSession & { template: ClinicTemplate },
+  {
+    kidName,
+    isNonMember,
+    sponsorName,
+    parentPhone,
+    skipWaitlist,
+  }: { kidName: string; isNonMember: boolean; sponsorName?: string; parentPhone: string; skipWaitlist?: boolean }
+) {
+  const existing = await prisma.signup.findMany({ where: { sessionId: targetSession.id } });
+  const activeCount = existing.filter((s) => !s.waitlisted && !s.cancelledAt).length;
+  const waitlisted = !skipWaitlist && activeCount >= targetSession.capacity;
+
+  const signup = await prisma.signup.create({
+    data: {
+      sessionId: targetSession.id,
+      parentPhone: parentPhone.trim(),
+      kidName: kidName.trim(),
+      isNonMember: Boolean(isNonMember),
+      sponsorName: isNonMember ? sponsorName?.trim() : null,
+      waitlisted,
+      addedByCoach: true,
+    },
+  });
+
+  const dateLabel = formatDateLong(targetSession.date);
+  const timeLabel = `${formatTime(targetSession.template.startTime)}-${formatTime(targetSession.template.endTime)}`;
+  const smsBody = waitlisted
+    ? `${clubName} Tennis: ${kidName} added to the WAITLIST for ${targetSession.template.name} on ${dateLabel} (${timeLabel}).`
+    : `${clubName} Tennis: ${kidName} confirmed for ${targetSession.template.name} on ${dateLabel} (${timeLabel}).`;
+  await sendSms(toE164(parentPhone), smsBody);
+
+  const coachBody = waitlisted
+    ? `${clubName} Tennis: ${kidName} added to the WAITLIST for ${targetSession.template.name} on ${dateLabel} (${timeLabel}) — walk-in.`
+    : `${clubName} Tennis: ${kidName} signed up for ${targetSession.template.name} on ${dateLabel} (${timeLabel}) — walk-in.`;
+  await notifyCoaches(coachBody);
+
+  return signup;
+}
 
 export async function POST(req: NextRequest) {
   const authSession = await getCoachSession();
   if (!authSession) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const { sessionId, kidName, isNonMember, sponsorName, parentPhone, skipWaitlist } = body || {};
+  const { sessionId, kidName, isNonMember, sponsorName, parentPhone, skipWaitlist, repeatNextWeek } = body || {};
 
   if (!sessionId || !kidName?.trim() || !parentPhone?.trim()) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -28,36 +70,32 @@ export async function POST(req: NextRequest) {
 
   const session = await prisma.clinicSession.findUnique({
     where: { id: sessionId },
-    include: { template: true, signups: true },
+    include: { template: true },
   });
   if (!session) return NextResponse.json({ error: "Session not found." }, { status: 404 });
 
-  const activeCount = session.signups.filter((s) => !s.waitlisted && !s.cancelledAt).length;
-  const waitlisted = !skipWaitlist && activeCount >= session.capacity;
+  const signup = await addWalkIn(session, { kidName, isNonMember, sponsorName, parentPhone, skipWaitlist });
 
-  const signup = await prisma.signup.create({
-    data: {
-      sessionId,
-      parentPhone: parentPhone.trim(),
-      kidName: kidName.trim(),
-      isNonMember: Boolean(isNonMember),
-      sponsorName: isNonMember ? sponsorName?.trim() : null,
-      waitlisted,
-      addedByCoach: true,
-    },
-  });
+  // Same 2-week cap as the public sign-up form's repeat option.
+  let repeatedNextWeek = false;
+  if (repeatNextWeek) {
+    const nextWeekDate = addDays(session.date, 7);
+    const nextWeekSession = await prisma.clinicSession.upsert({
+      where: { templateId_date: { templateId: session.templateId, date: nextWeekDate } },
+      update: {},
+      create: {
+        templateId: session.templateId,
+        date: nextWeekDate,
+        capacity: session.template.capacity,
+        minSignups: session.template.minSignups,
+      },
+      include: { template: true },
+    });
+    if (nextWeekSession.status !== "CANCELLED") {
+      await addWalkIn(nextWeekSession, { kidName, isNonMember, sponsorName, parentPhone, skipWaitlist });
+      repeatedNextWeek = true;
+    }
+  }
 
-  const dateLabel = formatDateLong(session.date);
-  const timeLabel = `${formatTime(session.template.startTime)}-${formatTime(session.template.endTime)}`;
-  const smsBody = waitlisted
-    ? `${clubName} Tennis: ${kidName} added to the WAITLIST for ${session.template.name} on ${dateLabel} (${timeLabel}).`
-    : `${clubName} Tennis: ${kidName} confirmed for ${session.template.name} on ${dateLabel} (${timeLabel}).`;
-  await sendSms(toE164(parentPhone), smsBody);
-
-  const coachBody = waitlisted
-    ? `${clubName} Tennis: ${kidName} added to the WAITLIST for ${session.template.name} on ${dateLabel} (${timeLabel}) — walk-in.`
-    : `${clubName} Tennis: ${kidName} signed up for ${session.template.name} on ${dateLabel} (${timeLabel}) — walk-in.`;
-  await notifyCoaches(coachBody);
-
-  return NextResponse.json({ success: true, signup });
+  return NextResponse.json({ success: true, signup, repeatedNextWeek });
 }
