@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
 import { notifyCoaches } from "@/lib/notifyCoaches";
-import { toE164 } from "@/lib/phone";
+import { toE164, samePhone } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
 import {
   formatDateLong,
@@ -122,16 +122,35 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Repeat is capped at one extra week — this + next week only — so a spot
+  // doesn't get held indefinitely and other families still get a turn. A
+  // family can only use it once per clinic: if they already have an active
+  // sign-up in next week's occurrence of this same clinic, block another
+  // recurring request outright rather than letting it stack on top.
+  const nextWeekDate = addDays(session.date, 7);
+  if (repeatNextWeek) {
+    const existingNextWeek = await prisma.clinicSession.findUnique({
+      where: { templateId_date: { templateId: session.templateId, date: nextWeekDate } },
+      include: { signups: true },
+    });
+    const alreadyRecurring = existingNextWeek?.signups.some(
+      (s) => !s.cancelledAt && samePhone(s.parentPhone, parentPhone)
+    );
+    if (alreadyRecurring) {
+      return NextResponse.json(
+        { error: "You already have a recurring sign-up for this clinic." },
+        { status: 400 }
+      );
+    }
+  }
+
   const { waitlistedCount, confirmedCount } = await signUpKidsForSession(session, kids, parentPhone);
 
-  // Repeat is capped at one extra week — this + next week only — so a spot
-  // doesn't get held indefinitely and other families still get a turn.
   // The next-week session is created directly (bypassing the weekly release
   // gate, which only governs a parent browsing an unreleased week on their
   // own) since this is an extension of a sign-up already made this week.
   let repeatedNextWeek = false;
   if (repeatNextWeek) {
-    const nextWeekDate = addDays(session.date, 7);
     const nextWeekSession = await prisma.clinicSession.upsert({
       where: { templateId_date: { templateId: session.templateId, date: nextWeekDate } },
       update: {},

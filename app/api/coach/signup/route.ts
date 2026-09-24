@@ -3,7 +3,7 @@ import { getCoachSession } from "@/lib/coachAuth";
 import { prisma } from "@/lib/prisma";
 import { sendSms } from "@/lib/sms";
 import { notifyCoaches } from "@/lib/notifyCoaches";
-import { toE164 } from "@/lib/phone";
+import { toE164, samePhone } from "@/lib/phone";
 import { formatTime } from "@/lib/clinics";
 import { formatDateLong, addDays } from "@/lib/weeks";
 import type { ClinicSession, ClinicTemplate } from "@prisma/client";
@@ -74,12 +74,29 @@ export async function POST(req: NextRequest) {
   });
   if (!session) return NextResponse.json({ error: "Session not found." }, { status: 404 });
 
+  // Same 2-week cap as the public sign-up form's repeat option, and same
+  // guard against re-using it to stack more sign-ups on an existing one.
+  const nextWeekDate = addDays(session.date, 7);
+  if (repeatNextWeek) {
+    const existingNextWeek = await prisma.clinicSession.findUnique({
+      where: { templateId_date: { templateId: session.templateId, date: nextWeekDate } },
+      include: { signups: true },
+    });
+    const alreadyRecurring = existingNextWeek?.signups.some(
+      (s) => !s.cancelledAt && samePhone(s.parentPhone, parentPhone)
+    );
+    if (alreadyRecurring) {
+      return NextResponse.json(
+        { error: "This family already has a recurring sign-up for this clinic." },
+        { status: 400 }
+      );
+    }
+  }
+
   const signup = await addWalkIn(session, { kidName, isNonMember, sponsorName, parentPhone, skipWaitlist });
 
-  // Same 2-week cap as the public sign-up form's repeat option.
   let repeatedNextWeek = false;
   if (repeatNextWeek) {
-    const nextWeekDate = addDays(session.date, 7);
     const nextWeekSession = await prisma.clinicSession.upsert({
       where: { templateId_date: { templateId: session.templateId, date: nextWeekDate } },
       update: {},
