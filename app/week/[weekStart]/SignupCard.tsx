@@ -96,8 +96,19 @@ export default function SignupCard({
     )
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  const recurringDaysSelected = (repeatNextWeek ? 1 : 0) + otherDayIds.length;
+
   function toggleOtherDay(id: string) {
-    setOtherDayIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setOtherDayIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (recurringDaysSelected >= 2) return prev;
+      return [...prev, id];
+    });
+  }
+
+  function toggleThisClinic(checked: boolean) {
+    if (checked && recurringDaysSelected >= 2) return;
+    setRepeatNextWeek(checked);
   }
 
   function selectForCancel(id: string) {
@@ -488,13 +499,14 @@ export default function SignupCard({
                 </button>
                 {showRecurring && (
                   <div className="mt-1.5 space-y-1.5 rounded-lg border border-court-navy/10 bg-white p-2.5">
-                    <p className="text-xs text-court-navy/50">2 weeks, up to 2 kids per clinic.</p>
+                    <p className="text-xs text-court-navy/50">2 weeks, up to 2 kids, up to 2 days per week.</p>
                     <label className="flex items-start gap-2 text-xs font-medium text-court-navy/70">
                       <input
                         type="checkbox"
                         checked={repeatNextWeek}
-                        onChange={(e) => setRepeatNextWeek(e.target.checked)}
-                        className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                        onChange={(e) => toggleThisClinic(e.target.checked)}
+                        disabled={!repeatNextWeek && recurringDaysSelected >= 2}
+                        className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30 disabled:opacity-40"
                       />
                       <span>
                         This clinic
@@ -509,17 +521,26 @@ export default function SignupCard({
                         <p className="border-t border-court-navy/10 pt-1.5 text-xs text-court-navy/50">
                           Ages {session.template.ageMin}-{session.template.ageMax} also runs:
                         </p>
-                        {otherSameAgeDays.map((d) => (
-                          <label key={d.id} className="flex items-center gap-2 text-xs font-medium text-court-navy/70">
+                        {otherSameAgeDays.map((d) => {
+                          const checked = otherDayIds.includes(d.id);
+                          return (
+                          <label key={d.id} className="flex items-start gap-2 text-xs font-medium text-court-navy/70">
                             <input
                               type="checkbox"
-                              checked={otherDayIds.includes(d.id)}
+                              checked={checked}
                               onChange={() => toggleOtherDay(d.id)}
-                              className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                              disabled={!checked && recurringDaysSelected >= 2}
+                              className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30 disabled:opacity-40"
                             />
-                            {d.template.name} — <span className="font-semibold text-court-navy">{formatDateShort(new Date(d.date))}</span>
+                            <span>
+                              {d.template.name}
+                              <span className="ml-1 font-semibold text-court-navy">
+                                {formatDateShort(new Date(d.date))} &amp; {formatDateShort(addDays(new Date(d.date), 7))}
+                              </span>
+                            </span>
                           </label>
-                        ))}
+                          );
+                        })}
                       </>
                     )}
                   </div>

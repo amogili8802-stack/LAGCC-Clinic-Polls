@@ -82,13 +82,16 @@ export async function POST(req: NextRequest) {
     repeatNextWeek?: boolean;
     additionalRecurringSessionIds?: string[];
   };
-  const otherDayIds = Array.isArray(additionalRecurringSessionIds) ? additionalRecurringSessionIds : [];
+  const otherDayIds = Array.from(new Set(Array.isArray(additionalRecurringSessionIds) ? additionalRecurringSessionIds : []));
 
   if (!sessionId || !parentPhone?.trim() || !Array.isArray(kids) || kids.length === 0) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
   if ((repeatNextWeek || otherDayIds.length > 0) && kids.length > 2) {
     return NextResponse.json({ error: "Recurring sign-up is limited to 2 kids." }, { status: 400 });
+  }
+  if ((repeatNextWeek ? 1 : 0) + otherDayIds.filter((id) => id !== sessionId).length > 2) {
+    return NextResponse.json({ error: "Recurring sign-up is limited to 2 clinic days per week." }, { status: 400 });
   }
   for (const kid of kids) {
     if (!kid.name?.trim()) {
