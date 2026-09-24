@@ -194,11 +194,6 @@ export default function SignupCard({
       setError("Enter the sponsoring member's name for each non-member child.");
       return;
     }
-    if ((repeatNextWeek || otherDayIds.length > 0) && cleanedKids.length > 2) {
-      setError("Recurring sign-up is limited to 2 kids.");
-      return;
-    }
-
     setSubmitting(true);
     try {
       const res = await fetch("/api/signup", {
@@ -499,7 +494,7 @@ export default function SignupCard({
                 </button>
                 {showRecurring && (
                   <div className="mt-1.5 space-y-1.5 rounded-lg border border-court-navy/10 bg-white p-2.5">
-                    <p className="text-xs text-court-navy/50">2 weeks, up to 2 kids, up to 2 days per week.</p>
+                    <p className="text-xs text-court-navy/50">2 weeks, up to 2 days per week.</p>
                     <label className="flex items-start gap-2 text-xs font-medium text-court-navy/70">
                       <input
                         type="checkbox"

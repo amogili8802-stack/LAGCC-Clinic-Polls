@@ -87,9 +87,6 @@ export async function POST(req: NextRequest) {
   if (!sessionId || !parentPhone?.trim() || !Array.isArray(kids) || kids.length === 0) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
-  if ((repeatNextWeek || otherDayIds.length > 0) && kids.length > 2) {
-    return NextResponse.json({ error: "Recurring sign-up is limited to 2 kids." }, { status: 400 });
-  }
   if ((repeatNextWeek ? 1 : 0) + otherDayIds.filter((id) => id !== sessionId).length > 2) {
     return NextResponse.json({ error: "Recurring sign-up is limited to 2 clinic days per week." }, { status: 400 });
   }
