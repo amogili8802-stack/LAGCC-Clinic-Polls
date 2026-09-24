@@ -76,17 +76,22 @@ call from the dashboard; the app never cancels one on its own.
   shows the full week, past clinics included, since coaches still need
   those for billing and rosters.
 - **Waitlisting** once a clinic hits capacity.
-- **Optional 2-week repeat sign-up** — a collapsed "Recurring" dropdown on
-  the public sign-up form (and a plain checkbox on the coach walk-in form)
-  reveals "Repeat next week too," which creates a second, independent
-  sign-up for the same clinic slot exactly one week later (auto-creating
-  that session if it doesn't exist yet). Capped at 2 kids per sign-up — so
-  at most 4 total spots (2 kids × 2 weeks) — and this + next week only, no
-  open-ended recurring series like the app used to have, so a family can't
-  hold a spot indefinitely and other families still get a turn. The two
-  weeks are otherwise unrelated: cancelling one doesn't touch the other,
-  and each gets its own confirmation text and its own waitlist/capacity
-  check.
+- **Optional 2-week repeat sign-up, across every same-age day** — a
+  collapsed "Recurring" dropdown on the public sign-up form (a plain
+  checkbox on the coach walk-in form) offers "This clinic" plus a checkbox
+  for every *other* clinic that week sharing the same age range (e.g.
+  signing up for Tuesday's ages 3-6 clinic also offers Wednesday's and
+  Thursday's ages 3-6 clinics), so a parent can set up recurring sign-ups
+  for all of them in one go instead of repeating the whole form per day.
+  Each checked day gets its own independent this-week + next-week pair of
+  sign-ups (auto-creating next week's session if needed) — capped at 2 kids
+  per sign-up per day, no open-ended recurring series like the app used to
+  have, so a family can't hold a spot indefinitely and other families still
+  get a turn. Every day is fully independent: cancelling one doesn't touch
+  any other, each gets its own confirmation text and its own
+  waitlist/capacity check, and a family that already has a recurring
+  sign-up for a given day just has that one skipped (not an error) if they
+  check it again while adding others.
 - **Nightly 8pm sign-up cutoff** — each clinic stops accepting new public
   sign-ups at 8:00pm (club-local time) the night before it runs, shown as a
   "Sign-ups closed" badge in place of the Sign Up button. Enforced on the

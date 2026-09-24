@@ -42,6 +42,22 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
     byDate.get(key)!.push(s);
   }
 
+  // Lightweight summary of every open clinic this week, passed to each card
+  // so its "Recurring" section can offer other same-age-range days too.
+  const weekSessions = sessions
+    .filter((s) => s.status !== "CANCELLED" && isSignupOpenForSession(s.date))
+    .map((s) => ({
+      id: s.id,
+      date: s.date.toISOString(),
+      template: {
+        name: s.template.name,
+        ageMin: s.template.ageMin,
+        ageMax: s.template.ageMax,
+        startTime: s.template.startTime,
+        endTime: s.template.endTime,
+      },
+    }));
+
   return (
     <div>
       <p className="mb-5 text-center font-display text-base italic text-court-green/80 sm:text-lg">
@@ -118,6 +134,7 @@ export default async function WeekPage({ params }: { params: Promise<{ weekStart
                   <SignupCard
                     key={session.id}
                     signupOpen={isSignupOpenForSession(session.date)}
+                    weekSessions={weekSessions}
                     session={{
                       ...session,
                       date: session.date.toISOString(),

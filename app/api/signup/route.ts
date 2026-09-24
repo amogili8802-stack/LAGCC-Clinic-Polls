@@ -75,17 +75,19 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
 
-  const { sessionId, parentPhone, kids, repeatNextWeek } = body as {
+  const { sessionId, parentPhone, kids, repeatNextWeek, additionalRecurringSessionIds } = body as {
     sessionId?: string;
     parentPhone?: string;
     kids?: KidInput[];
     repeatNextWeek?: boolean;
+    additionalRecurringSessionIds?: string[];
   };
+  const otherDayIds = Array.isArray(additionalRecurringSessionIds) ? additionalRecurringSessionIds : [];
 
   if (!sessionId || !parentPhone?.trim() || !Array.isArray(kids) || kids.length === 0) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
   }
-  if (repeatNextWeek && kids.length > 2) {
+  if ((repeatNextWeek || otherDayIds.length > 0) && kids.length > 2) {
     return NextResponse.json({ error: "Recurring sign-up is limited to 2 kids." }, { status: 400 });
   }
   for (const kid of kids) {
@@ -168,10 +170,65 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Other same-age-range clinic days the parent also checked — each is
+  // purely opt-in and gets the same 2-week treatment, entirely independent
+  // of the main session above. One already being used for this family
+  // doesn't block the others; it's just skipped.
+  let additionalDaysAdded = 0;
+  for (const otherId of new Set(otherDayIds)) {
+    if (otherId === sessionId) continue;
+    const otherSession = await prisma.clinicSession.findUnique({
+      where: { id: otherId },
+      include: { template: true },
+    });
+    if (
+      !otherSession ||
+      otherSession.status === "CANCELLED" ||
+      otherSession.template.ageMin !== session.template.ageMin ||
+      otherSession.template.ageMax !== session.template.ageMax ||
+      !isSignupOpenForSession(otherSession.date)
+    ) {
+      continue;
+    }
+
+    const otherNextWeekDate = addDays(otherSession.date, 7);
+    const existingOtherNextWeek = await prisma.clinicSession.findUnique({
+      where: { templateId_date: { templateId: otherSession.templateId, date: otherNextWeekDate } },
+      include: { signups: true },
+    });
+    const alreadyRecurring = existingOtherNextWeek?.signups.some(
+      (s) => !s.cancelledAt && samePhone(s.parentPhone, parentPhone)
+    );
+    if (alreadyRecurring) continue;
+
+    const alreadySignedUpThisWeek = (
+      await prisma.signup.findMany({ where: { sessionId: otherSession.id } })
+    ).some((s) => !s.cancelledAt && samePhone(s.parentPhone, parentPhone));
+    if (alreadySignedUpThisWeek) continue;
+
+    await signUpKidsForSession(otherSession, kids, parentPhone);
+    const otherNextWeekSession = await prisma.clinicSession.upsert({
+      where: { templateId_date: { templateId: otherSession.templateId, date: otherNextWeekDate } },
+      update: {},
+      create: {
+        templateId: otherSession.templateId,
+        date: otherNextWeekDate,
+        capacity: otherSession.template.capacity,
+        minSignups: otherSession.template.minSignups,
+      },
+      include: { template: true },
+    });
+    if (otherNextWeekSession.status !== "CANCELLED") {
+      await signUpKidsForSession(otherNextWeekSession, kids, parentPhone);
+    }
+    additionalDaysAdded++;
+  }
+
   return NextResponse.json({
     success: true,
     waitlistedCount,
     confirmedCount,
     repeatedNextWeek,
+    additionalDaysAdded,
   });
 }

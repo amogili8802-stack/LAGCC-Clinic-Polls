@@ -29,6 +29,18 @@ type SessionForCard = {
   signups: Signup[];
 };
 
+type WeekSessionSummary = {
+  id: string;
+  date: string; // ISO
+  template: {
+    name: string;
+    ageMin: number;
+    ageMax: number;
+    startTime: string;
+    endTime: string;
+  };
+};
+
 const REASON_LABELS: Record<string, string> = {
   RAIN: "Rain",
   HEAT: "Extreme heat",
@@ -43,7 +55,15 @@ type KidRow = {
   sponsorName: string;
 };
 
-export default function SignupCard({ session, signupOpen }: { session: SessionForCard; signupOpen: boolean }) {
+export default function SignupCard({
+  session,
+  signupOpen,
+  weekSessions = [],
+}: {
+  session: SessionForCard;
+  signupOpen: boolean;
+  weekSessions?: WeekSessionSummary[];
+}) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +71,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const [parentPhone, setParentPhone] = useState("");
   const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
   const [repeatNextWeek, setRepeatNextWeek] = useState(false);
+  const [otherDayIds, setOtherDayIds] = useState<string[]>([]);
   const [showRecurring, setShowRecurring] = useState(false);
   const [showRoster, setShowRoster] = useState(true);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
@@ -66,6 +87,18 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
   const isFull = spotsLeft === 0;
   const isCancelled = session.status === "CANCELLED";
   const nextWeekDate = addDays(new Date(session.date), 7);
+  const otherSameAgeDays = weekSessions
+    .filter(
+      (s) =>
+        s.id !== session.id &&
+        s.template.ageMin === session.template.ageMin &&
+        s.template.ageMax === session.template.ageMax
+    )
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  function toggleOtherDay(id: string) {
+    setOtherDayIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   function selectForCancel(id: string) {
     setCancelingId((prev) => (prev === id ? null : id));
@@ -150,7 +183,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
       setError("Enter the sponsoring member's name for each non-member child.");
       return;
     }
-    if (repeatNextWeek && cleanedKids.length > 2) {
+    if ((repeatNextWeek || otherDayIds.length > 0) && cleanedKids.length > 2) {
       setError("Recurring sign-up is limited to 2 kids.");
       return;
     }
@@ -169,6 +202,7 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
             sponsorName: k.nonMember ? k.sponsorName : undefined,
           })),
           repeatNextWeek,
+          additionalRecurringSessionIds: otherDayIds,
         }),
       });
       const data = await res.json();
@@ -180,12 +214,14 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
         data.waitlistedCount > 0
           ? `Signed up! ${data.waitlistedCount} of your ${cleanedKids.length} child(ren) were added to the waitlist since this clinic is full.`
           : "You're signed up!";
-      setSuccess(
-        data.repeatedNextWeek ? `${base} You're also signed up for ${formatDateShort(nextWeekDate)}.` : base
-      );
+      const extras: string[] = [];
+      if (data.repeatedNextWeek) extras.push(formatDateShort(nextWeekDate));
+      if (data.additionalDaysAdded > 0) extras.push(`${data.additionalDaysAdded} other day(s)`);
+      setSuccess(extras.length > 0 ? `${base} Also added: ${extras.join(", ")}.` : base);
       setParentPhone("");
       setKids([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
       setRepeatNextWeek(false);
+      setOtherDayIds([]);
       setTimeout(() => window.location.reload(), 1400);
     } catch {
       setError("Network error. Please try again.");
@@ -451,21 +487,42 @@ export default function SignupCard({ session, signupOpen }: { session: SessionFo
                   </span>
                 </button>
                 {showRecurring && (
-                  <label className="mt-1.5 flex items-start gap-2 rounded-lg border border-court-navy/10 bg-white p-2.5 text-xs font-medium text-court-navy/70">
-                    <input
-                      type="checkbox"
-                      checked={repeatNextWeek}
-                      onChange={(e) => setRepeatNextWeek(e.target.checked)}
-                      className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
-                    />
-                    <span>
-                      Sign up for both days below (up to 2 kids)
-                      <span className="mt-1 flex flex-col gap-0.5 font-semibold text-court-navy">
-                        <span>{formatDateShort(new Date(session.date))}</span>
-                        <span>{formatDateShort(nextWeekDate)}</span>
+                  <div className="mt-1.5 space-y-1.5 rounded-lg border border-court-navy/10 bg-white p-2.5">
+                    <p className="text-xs text-court-navy/50">2 weeks, up to 2 kids per clinic.</p>
+                    <label className="flex items-start gap-2 text-xs font-medium text-court-navy/70">
+                      <input
+                        type="checkbox"
+                        checked={repeatNextWeek}
+                        onChange={(e) => setRepeatNextWeek(e.target.checked)}
+                        className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                      />
+                      <span>
+                        This clinic
+                        <span className="ml-1 font-semibold text-court-navy">
+                          {formatDateShort(new Date(session.date))} &amp; {formatDateShort(nextWeekDate)}
+                        </span>
                       </span>
-                    </span>
-                  </label>
+                    </label>
+
+                    {otherSameAgeDays.length > 0 && (
+                      <>
+                        <p className="border-t border-court-navy/10 pt-1.5 text-xs text-court-navy/50">
+                          Ages {session.template.ageMin}-{session.template.ageMax} also runs:
+                        </p>
+                        {otherSameAgeDays.map((d) => (
+                          <label key={d.id} className="flex items-center gap-2 text-xs font-medium text-court-navy/70">
+                            <input
+                              type="checkbox"
+                              checked={otherDayIds.includes(d.id)}
+                              onChange={() => toggleOtherDay(d.id)}
+                              className="h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                            />
+                            {d.template.name} — <span className="font-semibold text-court-navy">{formatDateShort(new Date(d.date))}</span>
+                          </label>
+                        ))}
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
 
