@@ -35,12 +35,12 @@ export default function TermsPage() {
         <div>
           <h2 className="font-display text-base font-semibold text-court-navy">SMS Terms</h2>
           <p className="mt-1.5">
-            By providing your phone number when signing up, you consent to receive SMS text messages
-            from {clubName} Tennis Clinics about your clinic sign-ups — confirmations, waitlist status,
-            and cancellation notices. These are transactional messages tied to your own sign-up
-            activity, not marketing. Message frequency varies with how often you sign up for or manage
-            clinics. Message and data rates may apply. Reply STOP at any time to opt out of texts, or
-            HELP for help.
+            The sign-up form has a separate, optional checkbox for text updates about your clinic
+            sign-ups — confirmations, waitlist status, and cancellation notices. Checking it is never
+            required to sign up or manage a sign-up. These are transactional messages tied to your own
+            sign-up activity, not marketing. Message frequency varies with how often you sign up for or
+            manage clinics. Message and data rates may apply. Reply STOP at any time to opt out of
+            texts, or HELP for help.
           </p>
         </div>
 

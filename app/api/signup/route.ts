@@ -22,11 +22,14 @@ type KidInput = { name: string; nonMember?: boolean; sponsorName?: string };
 // Signs up the same kids for one clinic session and sends the matching
 // parent + coach texts. Used for the session the parent picked, and again
 // for next week's occurrence of the same clinic when they opt into the
-// (2-week-max) repeat option below.
+// (2-week-max) repeat option below. smsOptIn is never a condition of
+// signing up — it only controls whether the parent-facing text fires;
+// coaches are notified either way since that's a separate consent basis.
 async function signUpKidsForSession(
   targetSession: ClinicSession & { template: ClinicTemplate },
   kids: KidInput[],
-  parentPhone: string
+  parentPhone: string,
+  smsOptIn: boolean
 ) {
   const existing = await prisma.signup.findMany({ where: { sessionId: targetSession.id } });
   const activeCount = existing.filter((s) => !s.waitlisted && !s.cancelledAt).length;
@@ -40,6 +43,7 @@ async function signUpKidsForSession(
           kidName: kid.name.trim(),
           isNonMember: Boolean(kid.nonMember),
           sponsorName: kid.nonMember ? kid.sponsorName?.trim() : null,
+          smsOptIn,
           waitlisted: activeCount + i >= targetSession.capacity,
         },
       })
@@ -52,15 +56,17 @@ async function signUpKidsForSession(
 
   const dateLabel = formatDateLong(targetSession.date);
   const timeLabel = `${formatTime(targetSession.template.startTime)}-${formatTime(targetSession.template.endTime)}`;
-  let smsBody = `${clubName} Tennis: `;
-  if (confirmedNames.length > 0) {
-    smsBody += `${confirmedNames.join(", ")} confirmed for ${targetSession.template.name} on ${dateLabel}, ${timeLabel}. `;
+  if (smsOptIn) {
+    let smsBody = `${clubName} Tennis: `;
+    if (confirmedNames.length > 0) {
+      smsBody += `${confirmedNames.join(", ")} confirmed for ${targetSession.template.name} on ${dateLabel}, ${timeLabel}. `;
+    }
+    if (waitlistedNames.length > 0) {
+      smsBody += `${waitlistedNames.join(", ")} added to the WAITLIST for ${targetSession.template.name} on ${dateLabel} (clinic is full). `;
+    }
+    smsBody += "Reply to the pro shop with any questions.";
+    await sendSms(toE164(parentPhone), smsBody);
   }
-  if (waitlistedNames.length > 0) {
-    smsBody += `${waitlistedNames.join(", ")} added to the WAITLIST for ${targetSession.template.name} on ${dateLabel} (clinic is full). `;
-  }
-  smsBody += "Reply to the pro shop with any questions.";
-  await sendSms(toE164(parentPhone), smsBody);
 
   const allNames = [...confirmedNames, ...waitlistedNames];
   let coachBody = `${clubName} Tennis: ${allNames.join(", ")} signed up for ${targetSession.template.name} on ${dateLabel}, ${timeLabel}`;
@@ -75,14 +81,16 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
 
-  const { sessionId, parentPhone, kids, repeatNextWeek, additionalRecurringSessionIds } = body as {
+  const { sessionId, parentPhone, kids, repeatNextWeek, additionalRecurringSessionIds, smsOptIn } = body as {
     sessionId?: string;
     parentPhone?: string;
     kids?: KidInput[];
     repeatNextWeek?: boolean;
     additionalRecurringSessionIds?: string[];
+    smsOptIn?: boolean;
   };
   const otherDayIds = Array.from(new Set(Array.isArray(additionalRecurringSessionIds) ? additionalRecurringSessionIds : []));
+  const optIn = smsOptIn !== false;
 
   if (!sessionId || !parentPhone?.trim() || !Array.isArray(kids) || kids.length === 0) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -143,7 +151,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const { waitlistedCount, confirmedCount } = await signUpKidsForSession(session, kids, parentPhone);
+  const { waitlistedCount, confirmedCount } = await signUpKidsForSession(session, kids, parentPhone, optIn);
 
   // The next-week session is created directly (bypassing the weekly release
   // gate, which only governs a parent browsing an unreleased week on their
@@ -162,7 +170,7 @@ export async function POST(req: NextRequest) {
       include: { template: true },
     });
     if (nextWeekSession.status !== "CANCELLED") {
-      await signUpKidsForSession(nextWeekSession, kids, parentPhone);
+      await signUpKidsForSession(nextWeekSession, kids, parentPhone, optIn);
       repeatedNextWeek = true;
     }
   }
@@ -203,7 +211,7 @@ export async function POST(req: NextRequest) {
     ).some((s) => !s.cancelledAt && samePhone(s.parentPhone, parentPhone));
     if (alreadySignedUpThisWeek) continue;
 
-    await signUpKidsForSession(otherSession, kids, parentPhone);
+    await signUpKidsForSession(otherSession, kids, parentPhone, optIn);
     const otherNextWeekSession = await prisma.clinicSession.upsert({
       where: { templateId_date: { templateId: otherSession.templateId, date: otherNextWeekDate } },
       update: {},
@@ -216,7 +224,7 @@ export async function POST(req: NextRequest) {
       include: { template: true },
     });
     if (otherNextWeekSession.status !== "CANCELLED") {
-      await signUpKidsForSession(otherNextWeekSession, kids, parentPhone);
+      await signUpKidsForSession(otherNextWeekSession, kids, parentPhone, optIn);
     }
     additionalDaysAdded++;
   }

@@ -145,16 +145,26 @@ call from the dashboard; the app never cancels one on its own.
 - **Cancellation reasons**: Rain, Extreme heat, Not enough sign-ups, Other
   (with an optional free-text note) — chosen when a coach cancels a clinic.
 - **Text message notifications** via Twilio:
-  - Confirmation text when a parent signs up (or is added by a coach).
+  - The public sign-up form has a separate "Text me updates about this
+    sign-up" checkbox, checked by default but always optional — texts to
+    the parent are never a condition of signing up (a cell phone number is
+    still required to identify and manage the sign-up itself, just not to
+    receive texts about it). Unchecking it skips both the confirmation text
+    and any later self-cancellation confirmation text for that sign-up;
+    everything else about the sign-up works exactly the same either way.
+  - Confirmation text when a parent signs up (or is added by a coach), if
+    they opted in.
   - Confirmation text to the parent when they self-cancel a sign-up (via the
     public page or "Manage my sign-ups"), noting when it's within 24 hours
-    and still billed.
+    and still billed — again, only if they opted in.
   - Cancellation text to every parent signed up (including the waitlist)
     and every coach with a phone number on file, the moment a coach cancels
     a clinic, naming the reason.
   - Every coach with a phone number on file also gets a short text whenever
     anyone signs up (public sign-up or a coach walk-in) or self-cancels, so
-    coaches don't have to keep the dashboard open to stay current.
+    coaches don't have to keep the dashboard open to stay current — this is
+    a separate notification to staff, unaffected by a parent's own opt-in
+    choice.
   - If Twilio isn't configured, messages are logged to the server console
     instead of failing, so everything else still works in development.
 

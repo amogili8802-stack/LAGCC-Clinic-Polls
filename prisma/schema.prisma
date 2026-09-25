@@ -64,6 +64,7 @@ model Signup {
   memberNumber      String? // no longer collected — kept for historical rows
   isNonMember       Boolean          @default(false)
   sponsorName       String? // the sponsoring club member's name, for a non-member guest
+  smsOptIn          Boolean          @default(true) // separate from providing a phone number — texts are never a condition of signing up
   waitlisted        Boolean          @default(false)
   addedByCoach      Boolean          @default(false)
   notes             String?

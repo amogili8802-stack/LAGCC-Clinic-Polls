@@ -31,11 +31,14 @@ export default function PrivacyPolicyPage() {
         <div>
           <h2 className="font-display text-base font-semibold text-court-navy">How we use it</h2>
           <p className="mt-1.5">
-            We use this information to process clinic sign-ups and send SMS text messages about
-            clinic activity — including sign-up confirmations, waitlist status, and cancellation
-            notices (for example, if a clinic is cancelled due to weather or low enrollment). We do
-            not send marketing texts, and we do not sell or share your SMS opt-in data or personal
-            information with third parties for marketing purposes.
+            We use this information to process clinic sign-ups. The sign-up form has a separate,
+            optional checkbox for text updates about clinic activity — sign-up confirmations, waitlist
+            status, and cancellation notices (for example, if a clinic is cancelled due to weather or
+            low enrollment). Checking it is never required to sign up; the phone number itself is only
+            used to run and manage your sign-up. Coaches are notified about clinic activity separately
+            and aren&apos;t affected by this choice. We do not send marketing texts, and we do not sell
+            or share your SMS opt-in data or personal information with third parties for marketing
+            purposes.
           </p>
         </div>
 

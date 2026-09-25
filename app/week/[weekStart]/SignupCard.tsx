@@ -69,6 +69,7 @@ export default function SignupCard({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [parentPhone, setParentPhone] = useState("");
+  const [smsOptIn, setSmsOptIn] = useState(true);
   const [kids, setKids] = useState<KidRow[]>([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
   const [repeatNextWeek, setRepeatNextWeek] = useState(false);
   const [otherDayIds, setOtherDayIds] = useState<string[]>([]);
@@ -198,6 +199,7 @@ export default function SignupCard({
           })),
           repeatNextWeek,
           additionalRecurringSessionIds: otherDayIds,
+          smsOptIn,
         }),
       });
       const data = await res.json();
@@ -214,6 +216,7 @@ export default function SignupCard({
       if (data.additionalDaysAdded > 0) extras.push(`${data.additionalDaysAdded} other day(s)`);
       setSuccess(extras.length > 0 ? `${base} Also added: ${extras.join(", ")}.` : base);
       setParentPhone("");
+      setSmsOptIn(true);
       setKids([{ firstName: "", lastName: "", nonMember: false, sponsorName: "" }]);
       setRepeatNextWeek(false);
       setOtherDayIds([]);
@@ -392,16 +395,24 @@ export default function SignupCard({
             <form onSubmit={submit} className="mt-2 space-y-3 rounded-xl border border-court-navy/10 bg-court-cream/50 p-4">
               <input
                 type="tel"
-                placeholder="Cell phone (for text updates)"
+                placeholder="Cell phone"
                 value={parentPhone}
                 onChange={(e) => setParentPhone(e.target.value)}
                 className={`w-full ${inputClass}`}
                 required
               />
+              <label className="flex items-start gap-2 text-xs font-medium text-court-navy/70">
+                <input
+                  type="checkbox"
+                  checked={smsOptIn}
+                  onChange={(e) => setSmsOptIn(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 rounded border-court-navy/30 text-court-green focus:ring-court-green/30"
+                />
+                Text me updates about this sign-up (confirmations, waitlist status, cancellations)
+              </label>
               <p className="text-xs leading-relaxed text-court-navy/50">
-                By providing your phone number and signing up, you agree to receive SMS text messages about
-                your clinic sign-up (confirmations, waitlist status, and cancellation notices). Msg &amp; data
-                rates may apply. Msg frequency varies. Reply STOP to opt out, HELP for help. See our{" "}
+                This is optional — unchecking it won&apos;t affect your sign-up. Msg &amp; data rates may
+                apply. Msg frequency varies. Reply STOP to opt out, HELP for help. See our{" "}
                 <a href="/privacy" className="underline hover:text-court-navy/70">
                   Privacy Policy
                 </a>{" "}
